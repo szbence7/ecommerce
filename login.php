@@ -1,26 +1,43 @@
 <?php
-include 'includes/header.php';
+// Start session at the very beginning
+session_start();
+
+// Redirect if already logged in
+if (isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
+}
+
+// Don't include header.php here since we'll redirect on success
+require_once 'includes/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $email = $_POST['email'];
     $password = $_POST['password'];
     
-    $sql = "SELECT * FROM users WHERE email = ?";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "s", $email);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $user = mysqli_fetch_assoc($result);
-    
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['is_admin'] = $user['is_admin'];
-        header('Location: index.php');
-        exit;
-    } else {
-        $error = "Invalid email or password";
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+        
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_role'] = $user['user_role'];
+            
+            // Redirect immediately without any output
+            header('Location: index.php');
+            exit();
+        } else {
+            $error = "Invalid email or password";
+        }
+    } catch (PDOException $e) {
+        $error = "Database error: " . $e->getMessage();
     }
 }
+
+// Only include header and show form if we haven't redirected
+include 'includes/header.php';
 ?>
 
 <div class="row justify-content-center">
@@ -30,7 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <h3 class="card-title">Login</h3>
                 
                 <?php if (isset($error)): ?>
-                    <div class="alert alert-danger"><?= $error ?></div>
+                    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
+                
+                <?php if (isset($_GET['registered']) && $_GET['registered'] === 'success'): ?>
+                    <div class="alert alert-success">Registration successful! Please login with your credentials.</div>
                 <?php endif; ?>
                 
                 <form method="POST">
@@ -53,4 +74,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?> 
+<?php include 'includes/footer.php'; ?>

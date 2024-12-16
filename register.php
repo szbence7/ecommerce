@@ -1,35 +1,46 @@
 <?php
+// Start session at the very beginning
+session_start();
+
+// Redirect if already logged in
+if (isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
+}
+
 include 'includes/header.php';
+require_once 'includes/functions.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = mysqli_real_escape_string($conn, $_POST['name']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     
-    // Check if email already exists
-    $sql = "SELECT id FROM users WHERE email = ?";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "s", $email);
-    mysqli_stmt_execute($stmt);
-    mysqli_stmt_store_result($stmt);
-    
-    if (mysqli_stmt_num_rows($stmt) > 0) {
-        $error = "Email already exists";
-    } else {
-        $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "sss", $name, $email, $password);
+    try {
+        // Check if email already exists
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
         
-        if (mysqli_stmt_execute($stmt)) {
-            $_SESSION['user_id'] = mysqli_insert_id($conn);
-            $_SESSION['is_admin'] = 0;
-            header('Location: index.php');
-            exit;
+        if ($stmt->rowCount() > 0) {
+            $error = "Email already exists";
         } else {
-            $error = "Registration failed";
+            // Insert new user with role 3 (simple user)
+            $stmt = $pdo->prepare("INSERT INTO users (name, email, password, user_role) VALUES (?, ?, ?, 3)");
+            if ($stmt->execute([$name, $email, $password])) {
+                $_SESSION['user_id'] = $pdo->lastInsertId();
+                $_SESSION['user_role'] = 3;
+                $_SESSION['user_name'] = $name;
+                header('Location: login.php?registered=success');
+                exit;
+            } else {
+                $error = "Registration failed";
+            }
         }
+    } catch (PDOException $e) {
+        $error = "Registration failed: " . $e->getMessage();
     }
 }
+
 ?>
 
 <div class="row justify-content-center">
@@ -39,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <h3 class="card-title">Register</h3>
                 
                 <?php if (isset($error)): ?>
-                    <div class="alert alert-danger"><?= $error ?></div>
+                    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
                 
                 <form method="POST">
@@ -55,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     
                     <div class="mb-3">
                         <label>Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                        <input type="password" name="password" class="form-control" required minlength="6">
                     </div>
                     
                     <button type="submit" class="btn btn-primary">Register</button>
@@ -67,4 +78,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?> 
+<?php include 'includes/footer.php'; ?>

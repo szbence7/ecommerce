@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once 'db.php';
 ?>
 <!DOCTYPE html>
@@ -48,13 +50,14 @@ require_once 'db.php';
 
             <div>
                 <?php if(isset($_SESSION['user_id'])): ?>
-                    <?php if($_SESSION['is_admin']): ?>
-                        <a href="/admin/index.php" class="btn btn-primary">Admin Panel</a>
+                    <span class="me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+                    <?php if(isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                        <a href="/admin/index.php" class="btn btn-primary me-2">Admin Panel</a>
                     <?php endif; ?>
-                    <a href="logout.php" class="btn btn-outline-primary">Logout</a>
+                    <a href="logout.php" class="btn btn-outline-primary me-2">Logout</a>
                 <?php else: ?>
-                    <a href="login.php" class="btn btn-outline-primary">Login</a>
-                    <a href="register.php" class="btn btn-outline-primary">Register</a>
+                    <a href="login.php" class="btn btn-outline-primary me-2">Login</a>
+                    <a href="register.php" class="btn btn-outline-primary me-2">Register</a>
                 <?php endif; ?>
                 <button onclick="toggleCart()" class="btn btn-primary">
                     Cart <span id="cart-count">(<?php echo isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : '0'; ?>)</span>
@@ -65,4 +68,4 @@ require_once 'db.php';
 
     <?php include 'cart-drawer.php'; ?>
 
-    <div class="container" style="margin-top: 80px;">
+    <div class="container mt-5 pt-5">
