@@ -69,7 +69,7 @@ try {
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             <a href="product.php?id=<?= $product['id'] ?>">
-                                <img src="images/placeholder.jpg" class="card-img-top" alt="<?= htmlspecialchars($product['name']) ?>" style="height: 200px; object-fit: cover;">
+                                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="card-img-top" alt="<?= htmlspecialchars($product['name']) ?>" style="height: 200px; object-fit: cover;">
                             </a>
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">
