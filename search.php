@@ -1,27 +1,29 @@
 <?php
-include 'includes/db.php';
+require_once 'includes/db.php';
 
-$term = $_GET['q'] ?? '';
+header('Content-Type: application/json');
+
+$term = isset($_GET['q']) ? trim($_GET['q']) : '';
 $response = [];
 
-if (strlen($term) >= 3) {
-    $sql = "SELECT * FROM products WHERE name LIKE ? OR description LIKE ? LIMIT 5";
-    $stmt = mysqli_prepare($conn, $sql);
-    $searchTerm = "%$term%";
-    mysqli_stmt_bind_param($stmt, "ss", $searchTerm, $searchTerm);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+try {
+    $sql = "SELECT * FROM products WHERE name LIKE :term LIMIT 5";
+    $stmt = $pdo->prepare($sql);
+    $searchTerm = '%' . $term . '%';
+    $stmt->bindParam(':term', $searchTerm, PDO::PARAM_STR);
+    $stmt->execute();
     
-    while ($product = mysqli_fetch_assoc($result)) {
+    while ($product = $stmt->fetch()) {
         $response[] = [
             'id' => $product['id'],
             'name' => $product['name'],
             'price' => $product['price'],
-            'url' => "product.php?id=" . $product['id'],
-            'image' => "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop"
+            'image' => 'images/placeholder.jpg'
         ];
     }
+} catch (PDOException $e) {
+    error_log("Search error: " . $e->getMessage());
+    $response = ['error' => true, 'message' => $e->getMessage()];
 }
 
-header('Content-Type: application/json');
-echo json_encode($response); 
+echo json_encode($response);
