@@ -16,15 +16,15 @@ if (!$category) {
 $stmt = $pdo->prepare('SELECT * FROM products WHERE category_id = ?');
 $stmt->execute([$_GET['id']]);
 $products = $stmt->fetchAll();
-?>
 
+?>
 <h2><?php echo htmlspecialchars($category['name']); ?></h2>
 
 <div class="row">
     <?php foreach ($products as $product): ?>
         <div class="col-md-4 mb-4">
             <div class="card">
-                <img src="<?php echo htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
                 <div class="card-body">
                     <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
                     <p class="card-text"><?php echo htmlspecialchars($product['description']); ?></p>
@@ -36,4 +36,4 @@ $products = $stmt->fetchAll();
     <?php endforeach; ?>
 </div>
 
-<?php include 'includes/footer.php'; ?> 
+<?php include 'includes/footer.php'; ?>

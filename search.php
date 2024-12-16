@@ -17,7 +17,8 @@ if (strlen($term) >= 3) {
             'id' => $product['id'],
             'name' => $product['name'],
             'price' => $product['price'],
-            'url' => "product.php?id=" . $product['id']
+            'url' => "product.php?id=" . $product['id'],
+            'image' => "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop"
         ];
     }
 }

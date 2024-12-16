@@ -117,32 +117,13 @@ if (isset($_GET['id'])) {
         <?php
     }
 } else {
-    // Search functionality
-    $search = $_GET['search'] ?? '';
-    $where = '';
-    $params = [];
-    
-    if ($search) {
-        $where = "WHERE o.id LIKE ? 
-                  OR u.name LIKE ? 
-                  OR u.email LIKE ?
-                  OR o.total LIKE ? 
-                  OR o.status LIKE ?
-                  OR DATE_FORMAT(o.created_at, '%Y-%m-%d') LIKE ?";
-        $searchParam = "%$search%";
-        $params = [$searchParam, $searchParam, $searchParam, $searchParam, $searchParam, $searchParam];
-    }
-
-    // Orders list view with search
-    $stmt = $pdo->prepare("SELECT o.*, u.name as customer_name, u.email as customer_email 
-                          FROM orders o 
-                          JOIN users u ON o.user_id = u.id 
-                          $where
-                          ORDER BY o.created_at DESC");
-    $stmt->execute($params);
-    $orders = $stmt->fetchAll();
+    // Get initial orders for first page load
+    $stmt = $pdo->query("SELECT o.*, u.name as customer_name, u.email as customer_email 
+                         FROM orders o 
+                         JOIN users u ON o.user_id = u.id 
+                         ORDER BY o.created_at DESC");
+    $initialOrders = $stmt->fetchAll();
     ?>
-    
     <div class="container-fluid">
         <div class="row">
             <?php include 'layout/sidebar.php'; ?>
@@ -153,30 +134,23 @@ if (isset($_GET['id'])) {
                 <!-- Search Bar -->
                 <div class="card mb-4">
                     <div class="card-body">
-                        <form method="GET" class="row g-3">
+                        <div class="row g-3">
                             <div class="col-md-10">
                                 <div class="input-group">
                                     <input type="text" 
-                                           name="search" 
+                                           id="orderSearch" 
                                            class="form-control" 
                                            placeholder="Search by order ID, customer name, email, total, status, or date (YYYY-MM-DD)"
-                                           value="<?php echo htmlspecialchars($search); ?>">
-                                    <button class="btn btn-primary" type="submit">Search</button>
-                                    <?php if ($search): ?>
-                                        <a href="orders.php" class="btn btn-secondary">Clear</a>
-                                    <?php endif; ?>
+                                           autocomplete="off">
+                                    <button class="btn btn-secondary" type="button" id="clearSearch" style="display: none;">Clear</button>
                                 </div>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Results count -->
-                <?php if ($search): ?>
-                    <div class="alert alert-info">
-                        Found <?php echo count($orders); ?> orders matching "<?php echo htmlspecialchars($search); ?>"
-                    </div>
-                <?php endif; ?>
+                <div id="searchInfo" class="alert alert-info" style="display: none;"></div>
 
                 <!-- Orders Table -->
                 <div class="card">
@@ -194,13 +168,11 @@ if (isset($_GET['id'])) {
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php if (empty($orders)): ?>
-                                        <tr>
-                                            <td colspan="7" class="text-center">No orders found</td>
-                                        </tr>
+                                <tbody id="ordersTableBody">
+                                    <?php if (empty($initialOrders)): ?>
+                                        <tr><td colspan="7" class="text-center">No orders found</td></tr>
                                     <?php else: ?>
-                                        <?php foreach ($orders as $order): ?>
+                                        <?php foreach ($initialOrders as $order): ?>
                                             <tr>
                                                 <td>#<?php echo $order['id']; ?></td>
                                                 <td><?php echo htmlspecialchars($order['customer_name']); ?></td>
@@ -225,6 +197,53 @@ if (isset($_GET['id'])) {
                         </div>
                     </div>
                 </div>
+
+                <script>
+                let searchTimeout;
+                const searchInput = document.getElementById('orderSearch');
+                const clearButton = document.getElementById('clearSearch');
+                const searchInfo = document.getElementById('searchInfo');
+                const ordersTableBody = document.getElementById('ordersTableBody');
+
+                // Ne hívjuk meg azonnal a fetchOrders()-t
+
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.trim();
+                    clearButton.style.display = searchTerm ? 'block' : 'none';
+                    
+                    // Clear existing timeout
+                    clearTimeout(searchTimeout);
+                    
+                    // Set new timeout
+                    if (searchTerm.length === 0 || searchTerm.length >= 3) {
+                        searchTimeout = setTimeout(() => {
+                            fetchOrders(searchTerm);
+                        }, 300);
+                    }
+                });
+
+                clearButton.addEventListener('click', function() {
+                    searchInput.value = '';
+                    this.style.display = 'none';
+                    fetchOrders('');
+                });
+
+                function fetchOrders(searchTerm) {
+                    fetch(`get_orders.php?search=${encodeURIComponent(searchTerm)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            ordersTableBody.innerHTML = data.html;
+                            
+                            if (searchTerm) {
+                                searchInfo.textContent = `Found ${data.count} orders matching "${searchTerm}"`;
+                                searchInfo.style.display = 'block';
+                            } else {
+                                searchInfo.style.display = 'none';
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+                </script>
             </div>
         </div>
     </div>

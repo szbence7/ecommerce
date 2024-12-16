@@ -14,9 +14,7 @@ if (!$product) {
 
 <div class="row">
     <div class="col-md-6">
-        <?php if($product['image']): ?>
-            <img src="<?= htmlspecialchars($product['image']) ?>" class="img-fluid" alt="<?= htmlspecialchars($product['name']) ?>">
-        <?php endif; ?>
+        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="img-fluid" alt="<?= htmlspecialchars($product['name']) ?>">
     </div>
     <div class="col-md-6">
         <h1><?= htmlspecialchars($product['name']) ?></h1>
@@ -26,4 +24,4 @@ if (!$product) {
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?> 
+<?php include 'includes/footer.php'; ?>

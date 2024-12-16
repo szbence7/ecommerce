@@ -7,6 +7,7 @@ require_once 'db.php';
 <head>
     <title>Simple Ecommerce</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/cart.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
@@ -30,7 +31,7 @@ require_once 'db.php';
                     <a href="register.php" class="btn btn-outline-primary">Register</a>
                 <?php endif; ?>
                 <button onclick="toggleCart()" class="btn btn-primary">
-                    Cart (<span id="cartCount">0</span>)
+                    Cart <span id="cart-count">(<?php echo isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : '0'; ?>)</span>
                 </button>
             </div>
         </div>
@@ -38,4 +39,4 @@ require_once 'db.php';
 
     <?php include 'cart-drawer.php'; ?>
 
-    <div class="container" style="margin-top: 80px;"> 
+    <div class="container" style="margin-top: 80px;">

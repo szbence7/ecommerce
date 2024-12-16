@@ -1,14 +1,27 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include 'includes/header.php';
-require_once 'includes\functions.php';
+require_once 'includes/functions.php';
 
-// Kategóriák lekérése
-$stmt = $pdo->query('SELECT * FROM categories');
-$categories = $stmt->fetchAll();
+// Check if database connection exists
+if (!isset($pdo)) {
+    die("Database connection not established!");
+}
 
-// Termékek lekérése
-$stmt = $pdo->query('SELECT * FROM products');
-$products = $stmt->fetchAll();
+try {
+    // Kategóriák lekérése
+    $stmt = $pdo->query('SELECT * FROM categories');
+    $categories = $stmt->fetchAll();
+
+    // Termékek lekérése
+    $stmt = $pdo->query('SELECT * FROM products');
+    $products = $stmt->fetchAll();
+
+} catch (PDOException $e) {
+    die("Database error: " . $e->getMessage());
+}
 ?>
 
 <div class="row">
@@ -32,7 +45,7 @@ $products = $stmt->fetchAll();
             <?php foreach ($products as $product): ?>
                 <div class="col-md-4 mb-4">
                     <div class="card">
-                        <img src="<?php echo htmlspecialchars($product['image']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
                         <div class="card-body">
                             <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
                             <p class="card-text"><?php echo htmlspecialchars($product['description']); ?></p>
@@ -46,4 +59,4 @@ $products = $stmt->fetchAll();
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?> 
+<?php include 'includes/footer.php'; ?>
