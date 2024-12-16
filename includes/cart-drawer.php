@@ -9,11 +9,14 @@ if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
     $cartProducts = $stmt->fetchAll();
 }
 ?>
+<!-- Overlay -->
+<div id="cartOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 999;" onclick="closeCart()"></div>
+
 <div id="cartDrawer" style="position: fixed; top: 0; right: -300px; width: 300px; height: 100vh; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.1); transition: 0.3s; z-index: 1000; overflow-y: auto;">
     <div class="p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5>Your Cart</h5>
-            <button onclick="toggleCart()" class="btn-close"></button>
+            <button onclick="closeCart()" class="btn-close"></button>
         </div>
         <div id="cartItems">
             <?php if (isset($cartProducts) && !empty($cartProducts)): ?>
@@ -60,12 +63,27 @@ if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
 <script>
 function toggleCart() {
     const drawer = document.getElementById('cartDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    
     if(drawer.style.right === '0px') {
-        drawer.style.right = '-300px';
+        closeCart();
     } else {
         drawer.style.right = '0px';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
         updateCartContents();
     }
+}
+
+function closeCart() {
+    const drawer = document.getElementById('cartDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    
+    drawer.style.right = '-300px';
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+        overlay.style.visibility = 'hidden';
+    }, 300);
 }
 
 function updateCartQuantity(productId, action) {
@@ -113,4 +131,11 @@ function updateCartContents() {
             }));
         });
 }
+
+// Close cart when pressing Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeCart();
+    }
+});
 </script>
