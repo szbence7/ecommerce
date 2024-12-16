@@ -45,9 +45,13 @@ try {
             <?php foreach ($products as $product): ?>
                 <div class="col-md-4 mb-4">
                     <div class="card">
-                        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                        <a href="product.php?id=<?= $product['id'] ?>">
+                            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="card-img-top" alt="<?php echo htmlspecialchars($product['name']); ?>">
+                        </a>
                         <div class="card-body">
-                            <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
+                            <a href="product.php?id=<?= $product['id'] ?>" class="text-decoration-none text-dark">
+                                <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
+                            </a>
                             <p class="card-text"><?php echo htmlspecialchars($product['description']); ?></p>
                             <p class="card-text"><?php echo formatPrice($product['price']); ?></p>
                             <button onclick="addToCart(<?php echo $product['id']; ?>)" class="btn btn-primary">Add to Cart</button>

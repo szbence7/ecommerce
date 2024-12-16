@@ -64,6 +64,7 @@ function toggleCart() {
         drawer.style.right = '-300px';
     } else {
         drawer.style.right = '0px';
+        updateCartContents();
     }
 }
 
@@ -102,6 +103,14 @@ function updateCartContents() {
             
             // Update cart count
             document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
+
+            // Dispatch cart updated event
+            window.dispatchEvent(new CustomEvent('cartUpdated', { 
+                detail: { 
+                    products: data.products,
+                    cartCount: data.cartCount
+                }
+            }));
         });
 }
 </script>
