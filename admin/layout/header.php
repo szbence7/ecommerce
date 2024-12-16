@@ -1,11 +1,6 @@
 <?php
-session_start();
-require_once __DIR__ . '/../../includes/db.php';
-
-if (!isset($_SESSION['user_id']) || !$_SESSION['is_admin']) {
-    header('Location: /login.php');
-    exit();
-}
+// Admin header should not start session or check access
+// These checks are done in the individual admin files
 ?>
 <!DOCTYPE html>
 <html>
@@ -32,4 +27,4 @@ if (!isset($_SESSION['user_id']) || !$_SESSION['is_admin']) {
         }
     </style>
 </head>
-<body> 
+<body>

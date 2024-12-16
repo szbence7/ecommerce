@@ -51,7 +51,7 @@ require_once 'db.php';
             <div>
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <span class="me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
-                    <?php if(isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                    <?php if(isset($_SESSION['user_role']) && $_SESSION['user_role'] == 1): ?>
                         <a href="/admin/index.php" class="btn btn-primary me-2">Admin Panel</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline-primary me-2">Logout</a>

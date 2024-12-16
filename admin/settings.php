@@ -1,46 +1,56 @@
-<?php include 'layout/header.php'; ?>
-<?php require_once '../includes/db.php'; ?>
+<?php
+session_start();
+require_once '../includes/db.php';
+require_once '../includes/functions.php';
+
+// Check admin access
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
+    header('Location: /login.php');
+    exit();
+}
+
+include 'layout/header.php';
+
+// Árfolyam mentése
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['currency'])) {
+        $currency = $_POST['currency'];
+        $stmt = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'currency'");
+        if ($stmt->execute([$currency])) {
+            echo '<div class="alert alert-success">Currency settings updated successfully!</div>';
+        }
+    }
+    
+    if (isset($_POST['rates'])) {
+        foreach ($_POST['rates'] as $currency => $rate) {
+            if (is_numeric($rate)) {
+                $stmt = $pdo->prepare("INSERT INTO exchange_rates (currency, rate) VALUES (?, ?) 
+                                         ON DUPLICATE KEY UPDATE rate = ?");
+                $stmt->execute([$currency, $rate, $rate]);
+            }
+        }
+        echo '<div class="alert alert-success">Exchange rates updated successfully!</div>';
+    }
+}
+
+// Jelenlegi beállítások lekérése
+$stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'currency'");
+$currentCurrency = $stmt->fetchColumn();
+
+// Árfolyamok lekérése
+$stmt = $pdo->query("SELECT currency, rate FROM exchange_rates");
+$rates = [];
+while ($row = $stmt->fetch()) {
+    $rates[$row['currency']] = $row['rate'];
+}
+?>
+
 <div class="container-fluid">
     <div class="row">
         <?php include 'layout/sidebar.php'; ?>
         
         <div class="col-md-10" id="content">
             <h2>Settings</h2>
-
-            <?php
-            // Árfolyam mentése
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                if (isset($_POST['currency'])) {
-                    $currency = $_POST['currency'];
-                    $stmt = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'currency'");
-                    if ($stmt->execute([$currency])) {
-                        echo '<div class="alert alert-success">Currency settings updated successfully!</div>';
-                    }
-                }
-                
-                if (isset($_POST['rates'])) {
-                    foreach ($_POST['rates'] as $currency => $rate) {
-                        if (is_numeric($rate)) {
-                            $stmt = $pdo->prepare("INSERT INTO exchange_rates (currency, rate) VALUES (?, ?) 
-                                                 ON DUPLICATE KEY UPDATE rate = ?");
-                            $stmt->execute([$currency, $rate, $rate]);
-                        }
-                    }
-                    echo '<div class="alert alert-success">Exchange rates updated successfully!</div>';
-                }
-            }
-
-            // Jelenlegi beállítások lekérése
-            $stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'currency'");
-            $currentCurrency = $stmt->fetchColumn();
-
-            // Árfolyamok lekérése
-            $stmt = $pdo->query("SELECT currency, rate FROM exchange_rates");
-            $rates = [];
-            while ($row = $stmt->fetch()) {
-                $rates[$row['currency']] = $row['rate'];
-            }
-            ?>
 
             <div class="card mt-4">
                 <div class="card-body">
@@ -85,4 +95,4 @@
         </div>
     </div>
 </div>
-<?php include 'layout/footer.php'; ?> 
+<?php include 'layout/footer.php'; ?>

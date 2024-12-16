@@ -1,6 +1,13 @@
 <?php
-include '../includes/header.php';
+session_start();
+require_once '../includes/db.php';
 require_once '../includes/functions.php';
+
+// Check admin access
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
+    header('Location: /login.php');
+    exit();
+}
 
 $search = $_GET['search'] ?? '';
 $where = '';
@@ -47,4 +54,4 @@ header('Content-Type: application/json');
 echo json_encode([
     'html' => $html,
     'count' => count($orders)
-]); 
+]);

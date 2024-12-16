@@ -1,4 +1,14 @@
 <?php
+session_start();
+require_once '../includes/db.php';
+require_once '../includes/functions.php';
+
+// Check admin access
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
+    header('Location: /login.php');
+    exit();
+}
+
 include 'layout/header.php';
 require_once '../includes/functions.php';
 
@@ -192,4 +202,4 @@ $products = $stmt->fetchAll();
     </div>
 </div>
 
-<?php include 'layout/footer.php'; ?> 
+<?php include 'layout/footer.php'; ?>
