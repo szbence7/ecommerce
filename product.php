@@ -30,28 +30,13 @@ $currentQuantity = isset($_SESSION['cart'][$product['id']]) ? $_SESSION['cart'][
             <button onclick="updateQuantity('increase')" class="btn btn-outline-secondary">+</button>
         </div>
 
-        <button onclick="updateCartToQuantity(<?= $product['id'] ?>, quantity)" class="btn btn-lg btn-success">Update Cart</button>
+        <button onclick="updateCartToQuantity()" class="btn btn-lg btn-success">Update Cart</button>
     </div>
 </div>
 
 <script>
 let quantity = <?= $currentQuantity ?>;
 const currentProductId = <?= $product['id'] ?>;
-let cartQuantity = quantity;
-
-// Listen for cart updates
-window.addEventListener('cartUpdated', function(e) {
-    const productInCart = e.detail.products.find(p => p.id === currentProductId);
-    if (productInCart) {
-        cartQuantity = productInCart.quantity;
-        quantity = cartQuantity;
-        document.getElementById('quantity').textContent = quantity;
-    } else {
-        cartQuantity = 0;
-        quantity = 1;
-        document.getElementById('quantity').textContent = quantity;
-    }
-});
 
 function updateQuantity(action) {
     if (action === 'increase') {
@@ -62,45 +47,43 @@ function updateQuantity(action) {
     document.getElementById('quantity').textContent = quantity;
 }
 
-function updateCartToQuantity(productId, targetQuantity) {
-    const action = targetQuantity > cartQuantity ? 'increase' : 'decrease';
-    const iterations = Math.abs(targetQuantity - cartQuantity);
+function updateCartToQuantity() {
+    const targetQuantity = quantity; // A jelenlegi kívánt mennyiség
+    const currentQuantity = <?= isset($_SESSION['cart'][$product['id']]) ? $_SESSION['cart'][$product['id']] : 0 ?>; // A kosárban lévő mennyiség
+    
+    if (targetQuantity === currentQuantity) return; // Ha nincs változás, ne csináljunk semmit
+    
+    const action = targetQuantity > currentQuantity ? 'increase' : 'decrease';
+    const iterations = Math.abs(targetQuantity - currentQuantity);
     
     let promises = [];
-    for(let i = 0; i < iterations; i++) {
+    for (let i = 0; i < iterations; i++) {
         promises.push(
             fetch('update_cart_quantity.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: 'product_id=' + productId + '&action=' + action
+                body: 'product_id=' + currentProductId + '&action=' + action
             }).then(response => response.json())
         );
     }
     
     Promise.all(promises)
         .then(results => {
-            // Use the last result for the final update
             const lastResult = results[results.length - 1];
-            if (lastResult.success) {
+            if (lastResult && lastResult.success) {
                 // Update cart count in navbar with animation
                 const cartBadge = document.getElementById('cart-count');
                 if (cartBadge) {
                     cartBadge.textContent = lastResult.cartCount;
-                    // Remove existing animation class if exists
                     cartBadge.classList.remove('cart-badge-pop');
-                    // Trigger reflow to restart animation
                     void cartBadge.offsetWidth;
-                    // Add animation class
                     cartBadge.classList.add('cart-badge-pop');
                 }
                 
                 // Update cart drawer
                 updateCartDrawer();
-                
-                // Update cartQuantity to match the new quantity
-                cartQuantity = targetQuantity;
                 
                 // Show success message
                 showAlert('success', lastResult.message || 'Cart updated successfully');
