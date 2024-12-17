@@ -11,6 +11,10 @@ if (!isset($pdo)) {
 }
 
 try {
+    // Get current currency and exchange rate for price filter
+    $currentCurrency = getShopCurrency();
+    $rate = getExchangeRate($currentCurrency);
+
     // Kategóriák lekérése
     $stmt = $pdo->query('SELECT * FROM categories');
     $categories = $stmt->fetchAll();
@@ -50,13 +54,23 @@ try {
 
                 // Add price filter if set
                 if (isset($_GET['min_price']) && isset($_GET['max_price'])) {
-                    $minPrice = filter_var($_GET['min_price'], FILTER_VALIDATE_INT);
-                    $maxPrice = filter_var($_GET['max_price'], FILTER_VALIDATE_INT);
+                    $minPrice = filter_var($_GET['min_price'], FILTER_VALIDATE_FLOAT);
+                    $maxPrice = filter_var($_GET['max_price'], FILTER_VALIDATE_FLOAT);
                     
                     if ($minPrice !== false && $maxPrice !== false) {
-                        $where .= " AND price BETWEEN :min_price AND :max_price";
-                        $params[':min_price'] = $minPrice;
-                        $params[':max_price'] = $maxPrice;
+                        // Convert filter prices from display currency to EUR for database query
+                        if ($currentCurrency !== 'EUR') {
+                            $minPrice = convertToEUR($minPrice, $currentCurrency);
+                            $maxPrice = convertToEUR($maxPrice, $currentCurrency);
+                            
+                            // Add a small buffer to max price to handle rounding issues
+                            $maxPrice *= 1.001;
+                        }
+                        
+                        // Use ROUND to handle floating point precision
+                        $where .= " AND ROUND(price, 2) BETWEEN :min_price AND :max_price";
+                        $params[':min_price'] = round($minPrice, 2);
+                        $params[':max_price'] = round($maxPrice, 2);
                     }
                 }
 
@@ -77,7 +91,7 @@ try {
                                         <?= htmlspecialchars($product['name']) ?>
                                     </a>
                                 </h5>
-                                <p class="card-text text-muted mb-2"><?= number_format($product['price'], 0, '.', ' ') ?> Ft</p>
+                                <p class="card-text text-muted mb-2"><?= formatPrice($product['price']) ?></p>
                                 <button onclick="addToCart(<?= $product['id'] ?>, 1)" class="btn btn-primary mt-auto">
                                     Add to Cart
                                 </button>

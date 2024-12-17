@@ -3,6 +3,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once 'db.php';
+require_once 'functions.php';
+
+// Update session with latest user data
+updateUserSession();
 ?>
 <!DOCTYPE html>
 <html>
@@ -51,8 +55,8 @@ require_once 'db.php';
             <div>
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <span class="me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
-                    <?php if(isset($_SESSION['user_role']) && $_SESSION['user_role'] == 1): ?>
-                        <a href="/admin/index.php" class="btn btn-primary me-2">Admin Panel</a>
+                    <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>
+                        <a href="/ecommerce/admin/index.php" class="btn btn-primary me-2">Admin Panel</a>
                     <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline-primary me-2">Logout</a>
                 <?php else: ?>

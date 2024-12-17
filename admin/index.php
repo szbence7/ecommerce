@@ -1,4 +1,6 @@
-<?php include 'layout/header.php'; ?>
+<?php 
+require_once 'auth_check.php';
+include 'layout/header.php'; ?>
 <div class="container-fluid">
     <div class="row">
         <?php include 'layout/sidebar.php'; ?>
@@ -35,4 +37,4 @@
         </div>
     </div>
 </div>
-<?php include 'layout/footer.php'; ?> 
+<?php include 'layout/footer.php'; ?>

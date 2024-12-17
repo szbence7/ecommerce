@@ -1,34 +1,73 @@
 <?php
 // Get min and max prices from the database
 require_once 'db.php';
+require_once 'functions.php';
 
 try {
+    // Get prices in EUR from database
     $stmt = $pdo->query("SELECT MIN(price) as min_price, MAX(price) as max_price FROM products");
     $prices = $stmt->fetch(PDO::FETCH_ASSOC);
-    $min_price = floor($prices['min_price']);
-    $max_price = ceil($prices['max_price']);
+    $min_price_eur = floor($prices['min_price']);
+    $max_price_eur = ceil($prices['max_price']);
+
+    // Convert to display currency
+    $currentCurrency = getShopCurrency();
+    $rate = getExchangeRate($currentCurrency);
+    $min_price = floor($min_price_eur * $rate);
+    // Add a small buffer to max price to ensure inclusion of highest priced items
+    $max_price = ceil($max_price_eur * $rate * 1.001);
+
+    // Get current filter values from URL and convert back to display currency
+    $current_min = isset($_GET['min_price']) ? floatval($_GET['min_price']) : $min_price;
+    $current_max = isset($_GET['max_price']) ? floatval($_GET['max_price']) : $max_price;
+
 } catch (PDOException $e) {
     $min_price = 0;
     $max_price = 1000000;
+    $current_min = $min_price;
+    $current_max = $max_price;
 }
 
-// Get current filter values from URL if they exist
-$current_min = isset($_GET['min_price']) ? intval($_GET['min_price']) : $min_price;
-$current_max = isset($_GET['max_price']) ? intval($_GET['max_price']) : $max_price;
+// Get currency symbol
+$currencySymbol = '';
+switch($currentCurrency) {
+    case 'EUR':
+        $currencySymbol = '€';
+        break;
+    case 'HUF':
+        $currencySymbol = 'Ft';
+        break;
+    case 'USD':
+        $currencySymbol = '$';
+        break;
+    default:
+        $currencySymbol = $currentCurrency;
+}
+
+// Set appropriate step based on currency
+$step = $currentCurrency === 'HUF' ? 100 : 1;
+
+// Round values appropriately based on currency
+if ($currentCurrency === 'HUF') {
+    $min_price = floor($min_price / 100) * 100;
+    $max_price = ceil($max_price / 100) * 100;
+    $current_min = floor($current_min / 100) * 100;
+    $current_max = ceil($current_max / 100) * 100;
+}
 ?>
 
 <div class="price-filter-widget">
     <h3>Price Filter</h3>
     <div class="price-range-slider">
-        <input type="range" id="priceMin" class="range-min" min="<?= $min_price ?>" max="<?= $max_price ?>" value="<?= $current_min ?>" step="1">
-        <input type="range" id="priceMax" class="range-max" min="<?= $min_price ?>" max="<?= $max_price ?>" value="<?= $current_max ?>" step="1">
+        <input type="range" id="priceMin" class="range-min" min="<?= $min_price ?>" max="<?= $max_price ?>" value="<?= $current_min ?>" step="<?= $step ?>">
+        <input type="range" id="priceMax" class="range-max" min="<?= $min_price ?>" max="<?= $max_price ?>" value="<?= $current_max ?>" step="<?= $step ?>">
     </div>
     <div class="price-inputs">
         <div>
-            Min: <input type="number" id="minPrice" value="<?= $current_min ?>" min="<?= $min_price ?>" max="<?= $max_price ?>" step="1"> Ft
+            Min: <input type="number" id="minPrice" value="<?= $current_min ?>" min="<?= $min_price ?>" max="<?= $max_price ?>" step="<?= $step ?>"> <?= $currencySymbol ?>
         </div>
         <div>
-            Max: <input type="number" id="maxPrice" value="<?= $current_max ?>" min="<?= $min_price ?>" max="<?= $max_price ?>" step="1"> Ft
+            Max: <input type="number" id="maxPrice" value="<?= $current_max ?>" min="<?= $min_price ?>" max="<?= $max_price ?>" step="<?= $step ?>"> <?= $currencySymbol ?>
         </div>
     </div>
     <button id="applyPriceFilter" class="btn btn-primary mt-2">Apply Filter</button>
@@ -49,69 +88,53 @@ $current_max = isset($_GET['max_price']) ? intval($_GET['max_price']) : $max_pri
 }
 
 .price-range-slider input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
     position: absolute;
+    width: 100%;
+    -webkit-appearance: none;
     background: none;
     pointer-events: none;
 }
 
 .price-range-slider input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    height: 20px;
     width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: #007bff;
     cursor: pointer;
     margin-top: -8px;
-    pointer-events: auto;
     position: relative;
-    z-index: 1;
-}
-
-.price-range-slider input[type="range"]::-moz-range-thumb {
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
-    background: #007bff;
-    cursor: pointer;
-    border: none;
+    z-index: 3;
     pointer-events: auto;
-    position: relative;
-    z-index: 1;
 }
 
 .price-range-slider input[type="range"]::-webkit-slider-runnable-track {
     width: 100%;
-    height: 5px;
+    height: 4px;
     background: #ddd;
-    border-radius: 3px;
-    border: none;
+    border-radius: 2px;
+    z-index: 1;
 }
 
-.price-range-slider input[type="range"]::-moz-range-track {
-    width: 100%;
-    height: 5px;
-    background: #ddd;
-    border-radius: 3px;
-    border: none;
-}
-
-.price-inputs {
-    margin: 10px 0;
-}
-
-.price-inputs input {
-    width: 100px;
-}
-
-/* Active state for the track between the thumbs */
 .price-range-slider input[type="range"].range-min {
-    background: linear-gradient(to right, #ddd 0%, #007bff 100%);
+    z-index: 2;
 }
 
 .price-range-slider input[type="range"].range-max {
-    background: linear-gradient(to right, #007bff 0%, #ddd 100%);
+    z-index: 2;
+}
+
+.price-inputs {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.price-inputs input {
+    width: 80px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 </style>
 
@@ -122,77 +145,54 @@ document.addEventListener('DOMContentLoaded', function() {
     const minSlider = document.getElementById('priceMin');
     const maxSlider = document.getElementById('priceMax');
     const applyButton = document.getElementById('applyPriceFilter');
-
-    // Set initial values from URL if they exist
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('min_price') && urlParams.has('max_price')) {
-        minPriceInput.value = urlParams.get('min_price');
-        maxPriceInput.value = urlParams.get('max_price');
-        minSlider.value = urlParams.get('min_price');
-        maxSlider.value = urlParams.get('max_price');
-    }
-
-    // Update input when sliders change
+    
+    // Update input when slider changes
     minSlider.addEventListener('input', function() {
-        const minVal = parseInt(this.value);
-        const maxVal = parseInt(maxSlider.value);
-        
-        if (minVal > maxVal) {
-            maxSlider.value = minVal;
-            maxPriceInput.value = minVal;
+        minPriceInput.value = this.value;
+        if (parseInt(maxSlider.value) < parseInt(this.value)) {
+            maxSlider.value = this.value;
+            maxPriceInput.value = this.value;
         }
-        
-        minPriceInput.value = minVal;
     });
-
+    
     maxSlider.addEventListener('input', function() {
-        const maxVal = parseInt(this.value);
-        const minVal = parseInt(minSlider.value);
-        
-        if (maxVal < minVal) {
-            minSlider.value = maxVal;
-            minPriceInput.value = maxVal;
+        maxPriceInput.value = this.value;
+        if (parseInt(minSlider.value) > parseInt(this.value)) {
+            minSlider.value = this.value;
+            minPriceInput.value = this.value;
         }
-        
-        maxPriceInput.value = maxVal;
     });
-
-    // Update sliders when inputs change
-    minPriceInput.addEventListener('input', function() {
-        const minVal = parseInt(this.value);
-        const maxVal = parseInt(maxPriceInput.value);
-        
-        if (minVal > maxVal) {
-            maxPriceInput.value = minVal;
-            maxSlider.value = minVal;
+    
+    // Update slider when input changes
+    minPriceInput.addEventListener('change', function() {
+        minSlider.value = this.value;
+        if (parseInt(maxPriceInput.value) < parseInt(this.value)) {
+            maxSlider.value = this.value;
+            maxPriceInput.value = this.value;
         }
-        
-        minSlider.value = minVal;
     });
-
-    maxPriceInput.addEventListener('input', function() {
-        const maxVal = parseInt(this.value);
-        const minVal = parseInt(minPriceInput.value);
-        
-        if (maxVal < minVal) {
-            minPriceInput.value = maxVal;
-            minSlider.value = maxVal;
+    
+    maxPriceInput.addEventListener('change', function() {
+        maxSlider.value = this.value;
+        if (parseInt(minPriceInput.value) > parseInt(this.value)) {
+            minSlider.value = this.value;
+            minPriceInput.value = this.value;
         }
-        
-        maxSlider.value = maxVal;
     });
-
-    // Apply filter button click handler
+    
+    // Apply filter button
     applyButton.addEventListener('click', function() {
-        const minPrice = parseInt(minPriceInput.value);
-        const maxPrice = parseInt(maxPriceInput.value);
+        const minPrice = minPriceInput.value;
+        const maxPrice = maxPriceInput.value;
         
-        if (minPrice > maxPrice) {
-            alert('Minimum price cannot be greater than maximum price');
-            return;
-        }
-
-        window.location.href = `?min_price=${minPrice}&max_price=${maxPrice}`;
+        // Create and dispatch custom event
+        const event = new CustomEvent('priceRangeChanged', {
+            detail: {
+                minPrice: minPrice,
+                maxPrice: maxPrice
+            }
+        });
+        window.dispatchEvent(event);
     });
 });
 </script>
