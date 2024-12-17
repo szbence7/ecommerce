@@ -115,8 +115,6 @@ function updateCartQuantity(productId, action) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Cart data:', data); // Debug log
-        
         if (data.success) {
             // Update cart count in navbar
             const cartCountElement = document.getElementById('cart-count');
@@ -124,10 +122,7 @@ function updateCartQuantity(productId, action) {
                 cartCountElement.textContent = data.cartCount;
             }
             
-            // Ellenőrizzük, hogy tényleg 0-e a cartCount és szám típusú-e
             if (Number(data.cartCount) === 0) {
-                console.log('Cart is empty, closing drawer...'); // Debug log
-                
                 // Ha üres a kosár, azonnal bezárjuk a drawert és az overlayt
                 const drawer = document.getElementById('cartDrawer');
                 const overlay = document.getElementById('cartOverlay');
