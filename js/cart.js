@@ -10,7 +10,7 @@ function addToCart(productId) {
     .then(data => {
         if (data.success) {
             // Update cart count in navbar
-            document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
+            document.getElementById('cart-count').textContent = data.cartCount;
             
             // Update cart drawer
             updateCartDrawer();

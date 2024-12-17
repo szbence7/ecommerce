@@ -15,6 +15,7 @@ updateUserSession();
     <title>Simple Ecommerce</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="js/cart.js"></script>
     <script src="js/search.js"></script>
     <style>
@@ -40,6 +41,32 @@ updateUserSession();
             position: relative;
             width: 300px;
         }
+        .cart-button {
+            position: relative;
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--bs-primary);
+            cursor: pointer;
+        }
+        .cart-button:hover {
+            color: var(--bs-primary-dark);
+        }
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.75rem;
+            min-width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bs-primary);
+            color: white;
+            padding: 0 0.4rem;
+        }
     </style>
 </head>
 <body>
@@ -64,8 +91,9 @@ updateUserSession();
                     <a href="login.php" class="btn btn-outline-primary me-2"><?= __t('nav.login') ?></a>
                     <a href="register.php" class="btn btn-outline-primary me-2"><?= __t('nav.register') ?></a>
                 <?php endif; ?>
-                <button onclick="toggleCart()" class="btn btn-primary">
-                    <?= __t('nav.cart') ?> <span id="cart-count">(<?= isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0 ?>)</span>
+                <button onclick="toggleCart()" class="cart-button">
+                    <i data-lucide="shopping-cart" width="24" height="24"></i>
+                    <span class="cart-badge" id="cart-count"><?= isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0 ?></span>
                 </button>
             </div>
         </div>
@@ -74,3 +102,8 @@ updateUserSession();
     <?php include 'cart-drawer.php'; ?>
 
     <div class="container mt-5 pt-5">
+    
+    <script>
+        // Lucide ikonok inicializálása
+        lucide.createIcons();
+    </script>
