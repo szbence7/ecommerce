@@ -57,7 +57,7 @@ try {
 
     echo json_encode([
         'success' => true,
-        'cartCount' => array_sum($_SESSION['cart']),
+        'cartCount' => (string)array_sum($_SESSION['cart']),
         'cartTotal' => formatPrice($cartTotal),
         'message' => __t('cart.added_success', 'shop')
     ]);

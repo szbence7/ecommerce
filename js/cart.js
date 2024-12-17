@@ -14,10 +14,14 @@ function addToCart(productId) {
             
             // Update cart drawer
             updateCartDrawer();
+            
+            // Show success message
+            showAlert('success', data.message);
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        showAlert('danger', 'Error adding item to cart');
     });
 }
 

@@ -60,7 +60,7 @@ if (isset($_POST['product_id']) && isset($_POST['action'])) {
     }
     
     $response['success'] = true;
-    $response['cartCount'] = array_sum($_SESSION['cart']);
+    $response['cartCount'] = (string)array_sum($_SESSION['cart']);
     $response['cartTotal'] = formatPrice($cartTotal);
 }
 
