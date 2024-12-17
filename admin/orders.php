@@ -36,7 +36,7 @@ $orders = $stmt->fetchAll();
         
         <div class="col-md-10" id="content">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Orders Management</h2>
+                <h2><?php echo __t('admin.orders.title', 'admin'); ?></h2>
             </div>
 
             <!-- Search Bar -->
@@ -45,9 +45,9 @@ $orders = $stmt->fetchAll();
                     <div class="row">
                         <div class="col-md-6">
                             <div class="input-group">
-                                <input type="text" id="searchInput" class="form-control" placeholder="Search orders...">
+                                <input type="text" id="searchInput" class="form-control" placeholder="<?php echo __t('admin.orders.search.placeholder', 'admin'); ?>">
                                 <button class="btn btn-outline-secondary" type="button" onclick="searchOrders()">
-                                    Search
+                                    <?php echo __t('admin.orders.search.button', 'admin'); ?>
                                 </button>
                             </div>
                         </div>
@@ -60,12 +60,12 @@ $orders = $stmt->fetchAll();
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Actions</th>
+                            <th><?php echo __t('admin.orders.table.order_id', 'admin'); ?></th>
+                            <th><?php echo __t('admin.orders.table.customer', 'admin'); ?></th>
+                            <th><?php echo __t('admin.orders.table.total', 'admin'); ?></th>
+                            <th><?php echo __t('admin.orders.table.status', 'admin'); ?></th>
+                            <th><?php echo __t('admin.orders.table.date', 'admin'); ?></th>
+                            <th><?php echo __t('admin.orders.table.actions', 'admin'); ?></th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
@@ -81,18 +81,18 @@ $orders = $stmt->fetchAll();
                                     <form method="POST" class="d-inline">
                                         <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                         <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                            <option value="pending" <?php echo $order['status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                            <option value="processing" <?php echo $order['status'] == 'processing' ? 'selected' : ''; ?>>Processing</option>
-                                            <option value="shipped" <?php echo $order['status'] == 'shipped' ? 'selected' : ''; ?>>Shipped</option>
-                                            <option value="delivered" <?php echo $order['status'] == 'delivered' ? 'selected' : ''; ?>>Delivered</option>
-                                            <option value="cancelled" <?php echo $order['status'] == 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                                            <option value="pending" <?php echo $order['status'] == 'pending' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.pending', 'admin'); ?></option>
+                                            <option value="processing" <?php echo $order['status'] == 'processing' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.processing', 'admin'); ?></option>
+                                            <option value="shipped" <?php echo $order['status'] == 'shipped' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.shipped', 'admin'); ?></option>
+                                            <option value="delivered" <?php echo $order['status'] == 'delivered' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.delivered', 'admin'); ?></option>
+                                            <option value="cancelled" <?php echo $order['status'] == 'cancelled' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.cancelled', 'admin'); ?></option>
                                         </select>
                                     </form>
                                 </td>
                                 <td><?php echo date('Y-m-d H:i', strtotime($order['created_at'])); ?></td>
                                 <td>
                                     <button class="btn btn-sm btn-info" onclick="viewOrderDetails(<?php echo $order['id']; ?>)">
-                                        View Details
+                                        <?php echo __t('admin.orders.view_details', 'admin'); ?>
                                     </button>
                                 </td>
                             </tr>
@@ -109,11 +109,11 @@ $orders = $stmt->fetchAll();
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Order Details</h5>
+                <h5 class="modal-title"><?php echo __t('admin.orders.modal.title', 'admin'); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="orderDetailsContent">
-                Loading...
+                <?php echo __t('admin.orders.modal.loading', 'admin'); ?>
             </div>
         </div>
     </div>

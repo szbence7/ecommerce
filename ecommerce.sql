@@ -367,7 +367,41 @@ INSERT INTO `translations` (`id`, `language_code`, `translation_key`, `translati
 (87, 'hu', 'cart.drawer.total', 'Összesen:', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
 (88, 'en', 'cart.drawer.total', 'Total:', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
 (89, 'hu', 'cart.drawer.checkout', 'Fizetés', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(90, 'en', 'cart.drawer.checkout', 'Checkout', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
+(90, 'en', 'cart.drawer.checkout', 'Checkout', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(91, 'hu', 'admin.orders.title', 'Rendelések kezelése', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(92, 'en', 'admin.orders.title', 'Orders Management', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(93, 'hu', 'admin.orders.search.placeholder', 'Rendelések keresése...', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(94, 'en', 'admin.orders.search.placeholder', 'Search orders...', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(95, 'hu', 'admin.orders.search.button', 'Keresés', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(96, 'en', 'admin.orders.search.button', 'Search', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(97, 'hu', 'admin.orders.table.order_id', 'Rendelés azonosító', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(98, 'en', 'admin.orders.table.order_id', 'Order ID', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(99, 'hu', 'admin.orders.table.customer', 'Vásárló', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(100, 'en', 'admin.orders.table.customer', 'Customer', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(101, 'hu', 'admin.orders.table.total', 'Összeg', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(102, 'en', 'admin.orders.table.total', 'Total', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(103, 'hu', 'admin.orders.table.status', 'Állapot', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(104, 'en', 'admin.orders.table.status', 'Status', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(105, 'hu', 'admin.orders.table.date', 'Dátum', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(106, 'en', 'admin.orders.table.date', 'Date', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(107, 'hu', 'admin.orders.table.actions', 'Műveletek', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(108, 'en', 'admin.orders.table.actions', 'Actions', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(109, 'hu', 'admin.orders.status.pending', 'Függőben', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(110, 'en', 'admin.orders.status.pending', 'Pending', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(111, 'hu', 'admin.orders.status.processing', 'Feldolgozás alatt', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(112, 'en', 'admin.orders.status.processing', 'Processing', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(113, 'hu', 'admin.orders.status.shipped', 'Kiszállítva', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(114, 'en', 'admin.orders.status.shipped', 'Shipped', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(115, 'hu', 'admin.orders.status.delivered', 'Kézbesítve', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(116, 'en', 'admin.orders.status.delivered', 'Delivered', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(117, 'hu', 'admin.orders.status.cancelled', 'Törölve', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(118, 'en', 'admin.orders.status.cancelled', 'Cancelled', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(119, 'hu', 'admin.orders.view_details', 'Részletek', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(120, 'en', 'admin.orders.view_details', 'View Details', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(121, 'hu', 'admin.orders.modal.title', 'Rendelés részletei', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(122, 'en', 'admin.orders.modal.title', 'Order Details', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(123, 'hu', 'admin.orders.modal.loading', 'Betöltés...', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(124, 'en', 'admin.orders.modal.loading', 'Loading...', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
 
 -- --------------------------------------------------------
 
@@ -508,7 +542,7 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT for table `translations`
 --
 ALTER TABLE `translations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
 
 --
 -- AUTO_INCREMENT for table `users`
