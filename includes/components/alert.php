@@ -35,6 +35,8 @@ function show_alert($message, $type = 'success', $timeout = 5) {
                 transform: translateX(-50%%);
                 z-index: 9999;
                 pointer-events: none;
+                min-width: 300px;
+                max-width: 500px;
             }
             .alert {
                 position: relative;
