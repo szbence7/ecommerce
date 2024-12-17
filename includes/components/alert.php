@@ -28,6 +28,7 @@ function show_alert($message, $type = 'success', $timeout = 5) {
         <style>
             .alert {
                 position: relative;
+                transition: opacity 0.5s ease-out;
             }
             .circular-progress {
                 position: absolute;
@@ -41,7 +42,7 @@ function show_alert($message, $type = 'success', $timeout = 5) {
                 justify-content: center;
             }
             .progress-ring__circle {
-                transition: stroke-dashoffset 0.1s;
+                transition: stroke-dashoffset 0.1s linear;
                 transform: rotate(-90deg);
                 transform-origin: 50%% 50%%;
                 stroke-dasharray: 62.83;  /* 2 * π * 10 (radius) */
@@ -51,40 +52,57 @@ function show_alert($message, $type = 'success', $timeout = 5) {
                 font-size: 10px;
                 color: %s;
             }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            .alert-fade-out {
+                animation: fadeOut 0.5s ease-out forwards;
+            }
         </style>
         <script>
-            (function() {
-                const alert = document.getElementById("%s");
+            // Azonnal indítjuk a számlálót
+            document.getElementById("%s").setAttribute("data-start-time", Date.now());
+            
+            // Ez a függvény kezeli a visszaszámlálást
+            function startCountdown(alertId, duration) {
+                const alert = document.getElementById(alertId);
+                if (!alert) return;
+
                 const circle = alert.querySelector(".progress-ring__circle");
                 const text = alert.querySelector(".progress-text");
                 const radius = circle.r.baseVal.value;
                 const circumference = radius * 2 * Math.PI;
+                const startTime = parseInt(alert.getAttribute("data-start-time"));
+                const endTime = startTime + (duration * 1000);
                 
                 circle.style.strokeDasharray = `${circumference} ${circumference}`;
                 
-                let timeLeft = %d;
-                const duration = %d;
-                
-                function setProgress(percent) {
-                    const offset = circumference - (percent / 100 * circumference);
-                    circle.style.strokeDashoffset = offset;
-                }
-                
-                const timer = setInterval(() => {
+                function updateProgress() {
+                    const now = Date.now();
+                    const timeLeft = Math.max(0, (endTime - now) / 1000);
+                    
                     if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        alert.remove();
+                        // Add fade out class
+                        alert.classList.add("alert-fade-out");
+                        // Remove after animation completes
+                        setTimeout(() => alert.remove(), 500);
                         return;
                     }
                     
                     const progress = (timeLeft / duration) * 100;
-                    setProgress(progress);
-                    text.textContent = timeLeft;
-                    timeLeft--;
-                }, 1000);
+                    const offset = circumference - (progress / 100 * circumference);
+                    circle.style.strokeDashoffset = offset;
+                    text.textContent = Math.ceil(timeLeft);
+                    
+                    requestAnimationFrame(updateProgress);
+                }
                 
-                setProgress(100);
-            })();
+                requestAnimationFrame(updateProgress);
+            }
+
+            // Azonnal indítjuk a visszaszámlálást
+            startCountdown("%s", %d);
         </script>
     ', 
     $alert_class, 
@@ -94,7 +112,7 @@ function show_alert($message, $type = 'success', $timeout = 5) {
     $timeout,
     $type === 'success' ? '#155724' : ($type === 'error' ? '#721c24' : ($type === 'warning' ? '#856404' : '#0c5460')), // Text color based on alert type
     $alert_id,
-    $timeout,
+    $alert_id,
     $timeout
     );
 }
