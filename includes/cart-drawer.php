@@ -119,7 +119,7 @@ function updateCartQuantity(productId, action) {
             // Update cart count in navbar
             const cartCountElement = document.getElementById('cart-count');
             if (cartCountElement) {
-                cartCountElement.textContent = '(' + data.cartCount + ')';
+                cartCountElement.textContent = data.cartCount;
             }
             
             if (data.cartCount === 0) {
