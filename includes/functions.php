@@ -15,24 +15,43 @@ function getExchangeRate($currency) {
 }
 
 function formatPrice($price, $forceCurrency = null) {
+    global $currencyConfig;
+    
+    // Load currency configuration if not already loaded
+    if (!isset($currencyConfig)) {
+        $currencyConfig = json_decode(file_get_contents(__DIR__ . '/../config/currencies.json'), true);
+        if (!$currencyConfig) {
+            error_log('Error loading currency configuration in formatPrice');
+            return $price;
+        }
+    }
+    
     $displayCurrency = $forceCurrency ?? getShopCurrency();
     
     // If price is in EUR (base currency) and we want to display in another currency
-    if ($displayCurrency !== 'EUR') {
+    if ($displayCurrency !== $currencyConfig['base_currency']) {
         $rate = getExchangeRate($displayCurrency);
         $price = $price * $rate;
     }
     
-    switch ($displayCurrency) {
-        case 'HUF':
-            return number_format($price, 0, '.', ' ') . ' Ft';
-        case 'EUR':
-            return '€' . number_format($price, 2, '.', ' ');
-        case 'USD':
-            return '$' . number_format($price, 2, '.', ' ');
-        default:
-            return number_format($price, 2, '.', ' ') . ' ' . $displayCurrency;
+    // Get currency info from config
+    if (isset($currencyConfig['currencies'][$displayCurrency])) {
+        $currencyInfo = $currencyConfig['currencies'][$displayCurrency];
+        $symbol = $currencyInfo['symbol'];
+        
+        // Format based on step value (e.g., no decimals for HUF)
+        $decimals = $currencyInfo['step'] === 100 ? 0 : 2;
+        
+        // Format with symbol in correct position
+        if ($displayCurrency === 'HUF') {
+            return number_format($price, $decimals, '.', ' ') . ' ' . $symbol;
+        } else {
+            return $symbol . number_format($price, $decimals, '.', ' ');
+        }
     }
+    
+    // Fallback formatting if currency not in config
+    return number_format($price, 2, '.', ' ') . ' ' . $displayCurrency;
 }
 
 // Helper function to convert price back to EUR for storage

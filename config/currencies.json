@@ -1,0 +1,33 @@
+{
+    "base_currency": "EUR",
+    "currencies": {
+        "EUR": {
+            "name": "Euro",
+            "symbol": "€",
+            "code": "EUR",
+            "step": 1,
+            "default_rate": 1.00
+        },
+        "HUF": {
+            "name": "Hungarian Forint",
+            "symbol": "Ft",
+            "code": "HUF",
+            "step": 100,
+            "default_rate": 410.00
+        },
+        "USD": {
+            "name": "US Dollar",
+            "symbol": "$",
+            "code": "USD",
+            "step": 1,
+            "default_rate": 1.08
+        },
+        "GBP": {
+            "name": "British Pound",
+            "symbol": "£",
+            "code": "GBP",
+            "step": 1,
+            "default_rate": 0.86
+        }
+    }
+}
