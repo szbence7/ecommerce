@@ -3,6 +3,7 @@ session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once '../includes/language.php';
+require_once '../includes/components/alert.php';
 
 // Check admin access
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
@@ -43,8 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Update in session
             $_SESSION['currency'] = $newCurrency;
-            
-            echo '<div class="alert alert-success">' . __t('admin.settings.success', 'admin') . '</div>';
+            set_alert(__t('admin.settings.success', 'admin'), 'success');
         }
     }
     
@@ -64,14 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Get the language again (will get the new default)
             $currentLanguage = getCurrentLanguage();
             
-            echo '<div class="alert alert-success">' . __t('admin.settings.success', 'admin') . '</div>';
+            set_alert(__t('admin.settings.success', 'admin'), 'success');
         }
     }
 
     if (isset($_POST['rates'])) {
         $rates = $_POST['rates'];
         file_put_contents('../config/rates.json', json_encode($rates, JSON_PRETTY_PRINT));
-        echo '<div class="alert alert-success">' . __t('admin.settings.success', 'admin') . '</div>';
+        set_alert(__t('admin.settings.success', 'admin'), 'success');
     }
 }
 
@@ -89,6 +89,8 @@ $languages = getAvailableLanguages();
         <?php include 'layout/sidebar.php'; ?>
         
         <div class="col-md-10" id="content">
+            <?php display_alert(); ?>
+            
             <h2><?= __t('admin.settings', 'admin') ?></h2>
 
             <!-- Tabs -->

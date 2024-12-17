@@ -401,7 +401,11 @@ INSERT INTO `translations` (`id`, `language_code`, `translation_key`, `translati
 (121, 'hu', 'admin.orders.modal.title', 'Rendelés részletei', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
 (122, 'en', 'admin.orders.modal.title', 'Order Details', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
 (123, 'hu', 'admin.orders.modal.loading', 'Betöltés...', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(124, 'en', 'admin.orders.modal.loading', 'Loading...', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
+(124, 'en', 'admin.orders.modal.loading', 'Loading...', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(125, 'hu', 'admin.settings.currency_updated', 'A pénznem sikeresen frissítve', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(126, 'en', 'admin.settings.currency_updated', 'Currency has been updated successfully', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(127, 'hu', 'admin.settings.language_updated', 'A nyelv sikeresen frissítve', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(128, 'en', 'admin.settings.language_updated', 'Language has been updated successfully', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
 
 -- --------------------------------------------------------
 
@@ -542,7 +546,7 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT for table `translations`
 --
 ALTER TABLE `translations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
 
 --
 -- AUTO_INCREMENT for table `users`
