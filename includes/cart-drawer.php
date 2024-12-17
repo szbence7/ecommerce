@@ -115,6 +115,8 @@ function updateCartQuantity(productId, action) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Cart data:', data); // Debug log
+        
         if (data.success) {
             // Update cart count in navbar
             const cartCountElement = document.getElementById('cart-count');
@@ -122,9 +124,30 @@ function updateCartQuantity(productId, action) {
                 cartCountElement.textContent = data.cartCount;
             }
             
-            if (data.cartCount === 0) {
-                // Ha üres a kosár, zárjuk be a drawert
-                closeCart();
+            // Ellenőrizzük, hogy tényleg 0-e a cartCount és szám típusú-e
+            if (Number(data.cartCount) === 0) {
+                console.log('Cart is empty, closing drawer...'); // Debug log
+                
+                // Ha üres a kosár, azonnal bezárjuk a drawert és az overlayt
+                const drawer = document.getElementById('cartDrawer');
+                const overlay = document.getElementById('cartOverlay');
+                
+                // Azonnal bezárjuk, nincs animáció és transition
+                drawer.style.transition = 'none';
+                overlay.style.transition = 'none';
+                
+                drawer.style.right = '-300px';
+                overlay.style.visibility = 'hidden';
+                overlay.style.opacity = '0';
+                document.body.style.overflow = 'auto';
+                
+                // Visszaállítjuk a transition-t kis késleltetéssel
+                setTimeout(() => {
+                    drawer.style.transition = '0.3s';
+                    overlay.style.transition = '0.3s';
+                }, 50);
+                
+                // Frissítjük a kosár tartalmát
                 document.getElementById('cartItems').innerHTML = '<p class="text-center"><?= __t('cart.drawer.empty') ?></p>';
                 document.getElementById('checkoutButtonContainer').innerHTML = '';
             } else {
