@@ -113,8 +113,8 @@ try {
                                 <p class="card-text text-muted mb-2">
                                     <?= __t('product.price', 'shop', ['price' => formatPrice($product['price'])]) ?>
                                 </p>
-                                <button onclick="addToCart(<?= $product['id'] ?>, 1)" class="btn btn-primary mt-auto">
-                                    <?= __t('product.addtocart') ?>
+                                <button onclick="addToCart(<?= $product['id'] ?>)" class="btn btn-primary mt-auto">
+                                    <?= __t('product.addtocart', 'shop') ?>
                                 </button>
                             </div>
                         </div>
@@ -136,24 +136,36 @@ window.addEventListener('priceRangeChanged', function(e) {
     window.location.href = `?min_price=${minPrice}&max_price=${maxPrice}`;
 });
 
-function addToCart(productId, quantity) {
-    const formData = new FormData();
-    formData.append('product_id', productId);
-    formData.append('quantity', quantity);
-
-    fetch('update_cart.php', {
+function addToCart(productId) {
+    fetch('add_to_cart.php', {
         method: 'POST',
-        body: formData
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'product_id=' + productId
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Frissítjük a kosár számát
             document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
-            alert('<?= __t('cart.added_success') ?>');
+            
+            // Megjelenítjük a sikeres üzenetet
+            alert(data.message);
+            
+            // Frissítjük a kosár tartalmát
+            const cartDrawer = document.getElementById('cartDrawer');
+            if (cartDrawer) {
+                updateCartContents();
+            }
         } else {
-            alert('<?= __t('cart.added_error') ?>');
+            console.error('Server error:', data.debug);  // Debug információ
+            alert(data.message);
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Network error:', error);
+        alert('<?= __t('cart.added_error', 'shop') ?>');
+    });
 }
 </script>

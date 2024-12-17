@@ -65,7 +65,7 @@ updateUserSession();
                     <a href="register.php" class="btn btn-outline-primary me-2"><?= __t('nav.register') ?></a>
                 <?php endif; ?>
                 <button onclick="toggleCart()" class="btn btn-primary">
-                    <?= __t('nav.cart') ?> (<?= isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0 ?>)
+                    <?= __t('nav.cart') ?> <span id="cart-count">(<?= isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0 ?>)</span>
                 </button>
             </div>
         </div>
