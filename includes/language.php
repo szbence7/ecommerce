@@ -28,16 +28,30 @@ function __t($key, $context = 'shop', $params = []) {
     global $pdo;
     $lang = getCurrentLanguage();
     
+    // Hibakereséshez
+    error_log("Getting translation for key: $key, context: $context, language: $lang");
+    
     // Get translation from database
     $stmt = $pdo->prepare("SELECT translation_value FROM translations 
-                          WHERE language_code = ? AND translation_key = ? AND context = ?");
+                          WHERE language_code = ? AND translation_key = ? AND context = ?
+                          LIMIT 1");
     $stmt->execute([$lang, $key, $context]);
     $translation = $stmt->fetchColumn();
+    
+    // Ha nincs találat, írjuk ki a debug infót
+    if (!$translation) {
+        error_log("No translation found for: $key ($context) in $lang");
+    }
     
     // If translation not found in current language, try default language
     if (!$translation && $lang !== 'hu') {
         $stmt->execute(['hu', $key, $context]);
         $translation = $stmt->fetchColumn();
+        
+        // Ha még mindig nincs találat
+        if (!$translation) {
+            error_log("No translation found in default language (hu) either");
+        }
     }
     
     // If still no translation, return the key

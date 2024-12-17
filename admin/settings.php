@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update in session
             $_SESSION['currency'] = $newCurrency;
             
-            echo '<div class="alert alert-success">' . __t('admin.settings.success') . '</div>';
+            echo '<div class="alert alert-success">' . __t('admin.settings.success', 'admin') . '</div>';
         }
     }
     
@@ -64,14 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Get the language again (will get the new default)
             $currentLanguage = getCurrentLanguage();
             
-            echo '<div class="alert alert-success">' . __t('admin.settings.success') . '</div>';
+            echo '<div class="alert alert-success">' . __t('admin.settings.success', 'admin') . '</div>';
         }
     }
 
     if (isset($_POST['rates'])) {
         $rates = $_POST['rates'];
         file_put_contents('../config/rates.json', json_encode($rates, JSON_PRETTY_PRINT));
-        echo '<div class="alert alert-success">' . __t('admin.settings.success') . '</div>';
+        echo '<div class="alert alert-success">' . __t('admin.settings.success', 'admin') . '</div>';
     }
 }
 
@@ -89,23 +89,23 @@ $languages = getAvailableLanguages();
         <?php include 'layout/sidebar.php'; ?>
         
         <div class="col-md-10" id="content">
-            <h2><?= __t('admin.settings') ?></h2>
+            <h2><?= __t('admin.settings', 'admin') ?></h2>
 
             <!-- Tabs -->
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
                     <a class="nav-link <?= $activeTab === 'general' ? 'active' : '' ?>" href="?tab=general">
-                        <?= __t('admin.settings.general') ?>
+                        <?= __t('admin.settings.general', 'admin') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $activeTab === 'currency' ? 'active' : '' ?>" href="?tab=currency">
-                        <?= __t('admin.settings.currency') ?>
+                        <?= __t('admin.settings.currency', 'admin') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $activeTab === 'style' ? 'active' : '' ?>" href="?tab=style">
-                        <?= __t('admin.settings.style') ?>
+                        <?= __t('admin.settings.style', 'admin') ?>
                     </a>
                 </li>
             </ul>
@@ -115,11 +115,11 @@ $languages = getAvailableLanguages();
                 <!-- General Settings Tab -->
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h5 class="card-title"><?= __t('admin.settings.general') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.language') ?></p>
+                        <h5 class="card-title"><?= __t('admin.settings.general', 'admin') ?></h5>
+                        <p class="text-muted"><?= __t('admin.settings.language', 'admin') ?></p>
                         <form method="POST" action="">
                             <div class="mb-3">
-                                <label for="default_language" class="form-label"><?= __t('admin.settings.language.default') ?></label>
+                                <label for="default_language" class="form-label"><?= __t('admin.settings.language.default', 'admin') ?></label>
                                 <select class="form-select" id="default_language" name="default_language">
                                     <?php foreach ($languages as $lang): ?>
                                         <option value="<?= htmlspecialchars($lang['code']) ?>" 
@@ -129,7 +129,7 @@ $languages = getAvailableLanguages();
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save') ?></button>
+                            <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save', 'admin') ?></button>
                         </form>
                     </div>
                 </div>
@@ -138,12 +138,12 @@ $languages = getAvailableLanguages();
                 <!-- Currency Settings Tab -->
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h5 class="card-title"><?= __t('admin.settings.currency') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.currency.select') ?></p>
+                        <h5 class="card-title"><?= __t('admin.settings.currency', 'admin') ?></h5>
+                        <p class="text-muted"><?= __t('admin.settings.currency.select', 'admin') ?></p>
                         
                         <form method="POST">
                             <div class="mb-3">
-                                <label for="currency" class="form-label"><?= __t('admin.settings.currency.display') ?></label>
+                                <label for="currency" class="form-label"><?= __t('admin.settings.currency.display', 'admin') ?></label>
                                 <select name="currency" id="currency" class="form-select">
                                     <?php foreach ($currencyConfig['currencies'] as $code => $currency): ?>
                                         <option value="<?= $code ?>" <?= $currentCurrency === $code ? 'selected' : '' ?>>
@@ -152,7 +152,7 @@ $languages = getAvailableLanguages();
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save') ?></button>
+                            <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save', 'admin') ?></button>
                         </form>
                     </div>
                 </div>
@@ -160,8 +160,8 @@ $languages = getAvailableLanguages();
                 <!-- Exchange Rates -->
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h5 class="card-title"><?= __t('admin.settings.exchange_rates') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.exchange_rates.relative') ?></p>
+                        <h5 class="card-title"><?= __t('admin.settings.exchange_rates', 'admin') ?></h5>
+                        <p class="text-muted"><?= __t('admin.settings.exchange_rates.relative', 'admin') ?></p>
                         
                         <form method="POST">
                             <?php foreach ($currencyConfig['currencies'] as $code => $currency): ?>
@@ -170,23 +170,23 @@ $languages = getAvailableLanguages();
                                         <label class="form-label"><?= $currency['name'] ?> (<?= $currency['symbol'] ?>)</label>
                                         <input type="number" name="rates[<?= $code ?>]" class="form-control" step="0.001" 
                                                value="<?= number_format(isset($rates[$code]) ? $rates[$code] : $currency['default_rate'], 3) ?>" required>
-                                        <small class="text-muted"><?= __t('admin.settings.exchange_rates.current') ?>: 1 <?= $currencyConfig['base_currency'] ?> = <?= number_format(isset($rates[$code]) ? $rates[$code] : $currency['default_rate'], 3) ?> <?= $code ?></small>
+                                        <small class="text-muted"><?= __t('admin.settings.exchange_rates.current', 'admin') ?>: 1 <?= $currencyConfig['base_currency'] ?> = <?= number_format(isset($rates[$code]) ? $rates[$code] : $currency['default_rate'], 3) ?> <?= $code ?></small>
                                     </div>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                             
-                            <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save') ?></button>
+                            <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save', 'admin') ?></button>
                         </form>
 
                         <!-- Price Preview -->
                         <div class="mt-4">
-                            <h6><?= __t('admin.settings.price_preview') ?></h6>
-                            <p class="text-muted"><?= __t('admin.settings.price_preview.description') ?></p>
+                            <h6><?= __t('admin.settings.price_preview', 'admin') ?></h6>
+                            <p class="text-muted"><?= __t('admin.settings.price_preview.description', 'admin') ?></p>
                             <table class="table table-sm">
                                 <thead>
                                     <tr>
-                                        <th><?= $currencyConfig['base_currency'] ?> (<?= __t('admin.settings.base_currency') ?>)</th>
-                                        <th><?= __t('admin.settings.selected_currency') ?></th>
+                                        <th><?= $currencyConfig['base_currency'] ?> (<?= __t('admin.settings.base_currency', 'admin') ?>)</th>
+                                        <th><?= __t('admin.settings.selected_currency', 'admin') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -209,8 +209,8 @@ $languages = getAvailableLanguages();
                 <!-- Style Settings Tab -->
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h5 class="card-title"><?= __t('admin.settings.style') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.style.description') ?></p>
+                        <h5 class="card-title"><?= __t('admin.settings.style', 'admin') ?></h5>
+                        <p class="text-muted"><?= __t('admin.settings.style.description', 'admin') ?></p>
                         <!-- Style settings will be added here -->
                     </div>
                 </div>
