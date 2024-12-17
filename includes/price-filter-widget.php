@@ -86,7 +86,6 @@ if ($currentCurrency === 'HUF') {
                     <input type="range" class="range-max" id="priceMax" min="<?= $min_price ?>" max="<?= $max_price ?>" step="<?= $step ?>" value="<?= $current_max ?>">
                 </div>
             </div>
-            <button id="applyFilter" class="btn btn-primary w-100 mt-3"><?= __t('filter.apply') ?></button>
         </div>
     </div>
 </div>
@@ -153,7 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const maxPriceInput = document.getElementById('priceMax');
     const minLabel = document.getElementById('minPriceLabel');
     const maxLabel = document.getElementById('maxPriceLabel');
-    const applyButton = document.getElementById('applyFilter');
     const currencySymbol = '<?= $currencySymbol ?>';
     const step = <?= $step ?>;
 
@@ -177,10 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
         maxLabel.textContent = formatPrice(parseFloat(maxPriceInput.value));
     }
 
-    minPriceInput.addEventListener('input', updateLabels);
-    maxPriceInput.addEventListener('input', updateLabels);
-
-    applyButton.addEventListener('click', function() {
+    function applyFilter() {
         const event = new CustomEvent('priceRangeChanged', {
             detail: {
                 minPrice: minPriceInput.value,
@@ -188,6 +183,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         window.dispatchEvent(event);
-    });
+    }
+
+    // Update labels while dragging
+    minPriceInput.addEventListener('input', updateLabels);
+    maxPriceInput.addEventListener('input', updateLabels);
+
+    // Apply filter when slider is released
+    minPriceInput.addEventListener('change', applyFilter);
+    maxPriceInput.addEventListener('change', applyFilter);
 });
 </script>
