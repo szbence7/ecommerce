@@ -24,9 +24,9 @@ $currentCurrency = getShopCurrency();
 $rate = getExchangeRate($currentCurrency);
 ?>
 <!-- Overlay -->
-<div id="cartOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: 0.3s; z-index: 999;" onclick="closeCart()"></div>
+<div id="cartOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: opacity 500ms ease, visibility 500ms ease; z-index: 999;" onclick="closeCart()"></div>
 
-<div id="cartDrawer" style="position: fixed; top: 0; right: -300px; width: 300px; height: 100vh; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.1); transition: 0.3s; z-index: 1000; overflow-y: auto;">
+<div id="cartDrawer" style="position: fixed; top: 0; right: -300px; width: 300px; height: 100vh; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.1); transition: right 500ms ease; z-index: 1000; overflow-y: auto;">
     <div class="p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5><?= __t('cart.drawer.title') ?></h5>
@@ -84,6 +84,7 @@ function toggleCart() {
     if(drawer.style.right === '0px') {
         closeCart();
     } else {
+        // Smooth opening animation
         drawer.style.right = '0px';
         overlay.style.visibility = 'visible';
         overlay.style.opacity = '1';
@@ -95,14 +96,15 @@ function closeCart() {
     const drawer = document.getElementById('cartDrawer');
     const overlay = document.getElementById('cartOverlay');
     
+    // Smooth closing animation
     drawer.style.right = '-300px';
     overlay.style.opacity = '0';
     
-    // Várjunk az animáció végéig, majd rejtsük el az overlay-t
+    // Wait for the animation to finish before hiding the overlay
     setTimeout(() => {
         overlay.style.visibility = 'hidden';
-        document.body.style.overflow = 'auto'; // Visszaállítjuk az oldal görgetését
-    }, 300);
+        document.body.style.overflow = 'auto';
+    }, 500);
 }
 
 function updateCartQuantity(productId, action) {
@@ -127,20 +129,11 @@ function updateCartQuantity(productId, action) {
                 const drawer = document.getElementById('cartDrawer');
                 const overlay = document.getElementById('cartOverlay');
                 
-                // Azonnal bezárjuk, nincs animáció és transition
-                drawer.style.transition = 'none';
-                overlay.style.transition = 'none';
-                
+                // Azonnal bezárjuk, nincs animáció
                 drawer.style.right = '-300px';
                 overlay.style.visibility = 'hidden';
                 overlay.style.opacity = '0';
                 document.body.style.overflow = 'auto';
-                
-                // Visszaállítjuk a transition-t kis késleltetéssel
-                setTimeout(() => {
-                    drawer.style.transition = '0.3s';
-                    overlay.style.transition = '0.3s';
-                }, 50);
                 
                 // Frissítjük a kosár tartalmát
                 document.getElementById('cartItems').innerHTML = '<p class="text-center"><?= __t('cart.drawer.empty') ?></p>';
