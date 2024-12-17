@@ -63,39 +63,53 @@ function updateQuantity(action) {
 }
 
 function updateCartToQuantity(productId, targetQuantity) {
-    fetch('update_cart_to_quantity.php', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'product_id=' + productId + '&quantity=' + targetQuantity
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update cart count in navbar with animation
-            const cartBadge = document.getElementById('cart-count');
-            if (cartBadge) {
-                cartBadge.textContent = data.cartCount;
-                // Remove existing animation class if exists
-                cartBadge.classList.remove('cart-badge-pop');
-                // Trigger reflow to restart animation
-                void cartBadge.offsetWidth;
-                // Add animation class
-                cartBadge.classList.add('cart-badge-pop');
+    const action = targetQuantity > cartQuantity ? 'increase' : 'decrease';
+    const iterations = Math.abs(targetQuantity - cartQuantity);
+    
+    let promises = [];
+    for(let i = 0; i < iterations; i++) {
+        promises.push(
+            fetch('update_cart_quantity.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'product_id=' + productId + '&action=' + action
+            }).then(response => response.json())
+        );
+    }
+    
+    Promise.all(promises)
+        .then(results => {
+            // Use the last result for the final update
+            const lastResult = results[results.length - 1];
+            if (lastResult.success) {
+                // Update cart count in navbar with animation
+                const cartBadge = document.getElementById('cart-count');
+                if (cartBadge) {
+                    cartBadge.textContent = lastResult.cartCount;
+                    // Remove existing animation class if exists
+                    cartBadge.classList.remove('cart-badge-pop');
+                    // Trigger reflow to restart animation
+                    void cartBadge.offsetWidth;
+                    // Add animation class
+                    cartBadge.classList.add('cart-badge-pop');
+                }
+                
+                // Update cart drawer
+                updateCartDrawer();
+                
+                // Update cartQuantity to match the new quantity
+                cartQuantity = targetQuantity;
+                
+                // Show success message
+                showAlert('success', lastResult.message || 'Cart updated successfully');
             }
-            
-            // Update cart drawer
-            updateCartContents();
-            
-            // Show success message
-            showAlert('success', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('danger', 'Error updating cart');
-    });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', 'Error updating cart');
+        });
 }
 </script>
 
