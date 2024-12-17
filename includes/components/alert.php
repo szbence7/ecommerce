@@ -16,19 +16,33 @@ function show_alert($message, $type = 'success', $timeout = 5) {
 
     // Return the alert HTML with circular progress bar
     return sprintf('
-        <div class="alert %s alert-dismissible fade show" role="alert" id="%s">
-            %s
-            <div class="circular-progress">
-                <svg class="progress-ring" width="24" height="24">
-                    <circle class="progress-ring__circle" stroke="%s" stroke-width="2" fill="transparent" r="10" cx="12" cy="12"/>
-                </svg>
-                <span class="progress-text">%d</span>
+        <div class="alert-container">
+            <div class="alert %s alert-dismissible fade show" role="alert" id="%s">
+                %s
+                <div class="circular-progress">
+                    <svg class="progress-ring" width="24" height="24">
+                        <circle class="progress-ring__circle" stroke="%s" stroke-width="2" fill="transparent" r="10" cx="12" cy="12"/>
+                    </svg>
+                    <span class="progress-text">%d</span>
+                </div>
             </div>
         </div>
         <style>
+            .alert-container {
+                position: fixed;
+                top: 1rem;
+                left: 50%%;
+                transform: translateX(-50%%);
+                z-index: 9999;
+                pointer-events: none;
+            }
             .alert {
                 position: relative;
-                transition: opacity 0.5s ease-out;
+                transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+                transform: translateY(0);
+                margin: 0;
+                pointer-events: auto;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             }
             .circular-progress {
                 position: absolute;
@@ -52,12 +66,23 @@ function show_alert($message, $type = 'success', $timeout = 5) {
                 font-size: 10px;
                 color: %s;
             }
-            @keyframes fadeOut {
-                from { opacity: 1; }
-                to { opacity: 0; }
+            @keyframes fadeOutUp {
+                from { 
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                to { 
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
             }
             .alert-fade-out {
-                animation: fadeOut 0.5s ease-out forwards;
+                animation: fadeOutUp 0.5s ease-out forwards;
+            }
+            
+            /* Ha több alert is van egyszerre */
+            .alert-container + .alert-container {
+                margin-top: 1rem;
             }
         </style>
         <script>
@@ -86,7 +111,7 @@ function show_alert($message, $type = 'success', $timeout = 5) {
                         // Add fade out class
                         alert.classList.add("alert-fade-out");
                         // Remove after animation completes
-                        setTimeout(() => alert.remove(), 500);
+                        setTimeout(() => alert.closest(".alert-container").remove(), 500);
                         return;
                     }
                     
