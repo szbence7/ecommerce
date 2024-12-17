@@ -97,8 +97,11 @@ function closeCart() {
     
     drawer.style.right = '-300px';
     overlay.style.opacity = '0';
+    
+    // Várjunk az animáció végéig, majd rejtsük el az overlay-t
     setTimeout(() => {
         overlay.style.visibility = 'hidden';
+        document.body.style.overflow = 'auto'; // Visszaállítjuk az oldal görgetését
     }, 300);
 }
 
@@ -114,36 +117,52 @@ function updateCartQuantity(productId, action) {
     .then(data => {
         if (data.success) {
             // Update cart count in navbar
-            document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
-            
-            // Update quantity display
-            const quantityElement = document.querySelector('.quantity-' + productId);
-            if (quantityElement) {
-                quantityElement.textContent = data.quantity;
+            const cartCountElement = document.getElementById('cart-count');
+            if (cartCountElement) {
+                cartCountElement.textContent = data.cartCount > 0 ? '(' + data.cartCount + ')' : '(0)';
             }
             
-            // Update subtotal
-            const subtotalElement = document.querySelector('.subtotal-' + productId);
-            if (subtotalElement) {
-                subtotalElement.textContent = data.subtotal;
-            }
-            
-            // Update cart total
-            const cartTotalElement = document.getElementById('cartTotal');
-            if (cartTotalElement) {
-                cartTotalElement.textContent = data.cartTotal;
-            }
+            if (data.cartCount === 0) {
+                // Ha üres a kosár, zárjuk be a drawert
+                closeCart();
+            } else {
+                // Update quantity display
+                const quantityElement = document.querySelector('.quantity-' + productId);
+                if (quantityElement) {
+                    quantityElement.textContent = data.quantity;
+                }
+                
+                // Update subtotal
+                const subtotalElement = document.querySelector('.subtotal-' + productId);
+                if (subtotalElement) {
+                    subtotalElement.textContent = data.subtotal;
+                }
+                
+                // Update cart total
+                const cartTotalElement = document.getElementById('cartTotal');
+                if (cartTotalElement) {
+                    cartTotalElement.textContent = data.cartTotal;
+                }
 
-            // Update checkout button visibility
-            const checkoutButtonContainer = document.getElementById('checkoutButtonContainer');
-            if (checkoutButtonContainer) {
-                if (data.cartCount > 0) {
-                    checkoutButtonContainer.innerHTML = '<a href="checkout.php" class="btn btn-primary w-100"><?= __t('cart.drawer.checkout') ?></a>';
-                } else {
-                    checkoutButtonContainer.innerHTML = '';
+                // Update checkout button visibility
+                const checkoutButtonContainer = document.getElementById('checkoutButtonContainer');
+                if (checkoutButtonContainer) {
+                    if (data.cartCount > 0) {
+                        checkoutButtonContainer.innerHTML = '<a href="checkout.php" class="btn btn-primary w-100"><?= __t('cart.drawer.checkout') ?></a>';
+                    } else {
+                        checkoutButtonContainer.innerHTML = '';
+                    }
+                }
+                
+                // Ha a mennyiség 0, frissítsük a kosár tartalmát
+                if (data.quantity === 0) {
+                    updateCartContents();
                 }
             }
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
     });
 }
 
