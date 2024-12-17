@@ -314,32 +314,36 @@ INSERT INTO `translations` (`id`, `language_code`, `translation_key`, `translati
 (34, 'en', 'admin.settings.style', 'Style Settings', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
 (35, 'hu', 'admin.settings.language', 'Nyelvi beállítások', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
 (36, 'en', 'admin.settings.language', 'Language Settings', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(37, 'hu', 'admin.settings.save', 'Változtatások mentése', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(38, 'en', 'admin.settings.save', 'Save Changes', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(39, 'hu', 'admin.settings.language.default', 'Alapértelmezett nyelv', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(40, 'en', 'admin.settings.language.default', 'Default Language', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(41, 'hu', 'admin.panel', 'Admin Panel', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(42, 'en', 'admin.panel', 'Admin Panel', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(43, 'hu', 'admin.return_to_shop', 'Vissza a boltba', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(44, 'en', 'admin.return_to_shop', 'Return to Shop', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(45, 'hu', 'admin.logout', 'Kijelentkezés', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(46, 'en', 'admin.logout', 'Logout', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(47, 'hu', 'cart.added_success', 'Termék sikeresen hozzáadva a kosárhoz!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(48, 'en', 'cart.added_success', 'Product successfully added to cart!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(49, 'hu', 'cart.added_error', 'Hiba történt a termék kosárba helyezésekor!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(50, 'en', 'cart.added_error', 'Error adding product to cart!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(51, 'hu', 'categories.title', 'Kategóriák', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(52, 'en', 'categories.title', 'Categories', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(53, 'hu', 'nav.search', 'Termékek keresése...', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(54, 'en', 'nav.search', 'Search products...', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(55, 'hu', 'nav.logout', 'Kijelentkezés', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(56, 'en', 'nav.logout', 'Logout', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(57, 'hu', 'nav.cart_count', 'Kosár ({count})', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(58, 'en', 'nav.cart_count', 'Cart ({count})', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(59, 'hu', 'filter.title', 'Ár szűrő', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(60, 'en', 'filter.title', 'Price Filter', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(61, 'hu', 'filter.apply', 'Szűrő alkalmazása', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(62, 'en', 'filter.apply', 'Apply Filter', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
+(37, 'hu', 'admin.panel', 'Admin Panel', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(38, 'en', 'admin.panel', 'Admin Panel', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(39, 'hu', 'admin.return_to_shop', 'Vissza a boltba', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(40, 'en', 'admin.return_to_shop', 'Return to Shop', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(41, 'hu', 'admin.logout', 'Kijelentkezés', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(42, 'en', 'admin.logout', 'Logout', 'admin', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(43, 'hu', 'cart.added_success', 'Termék sikeresen hozzáadva a kosárhoz!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(44, 'en', 'cart.added_success', 'Product successfully added to cart!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(45, 'hu', 'cart.added_error', 'Hiba történt a termék kosárba helyezésekor!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(46, 'en', 'cart.added_error', 'Error adding product to cart!', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(47, 'hu', 'categories.title', 'Kategóriák', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(48, 'en', 'categories.title', 'Categories', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(49, 'hu', 'nav.search', 'Termékek keresése...', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(50, 'en', 'nav.search', 'Search products...', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(51, 'hu', 'nav.logout', 'Kijelentkezés', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(52, 'en', 'nav.logout', 'Logout', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(53, 'hu', 'nav.cart_count', 'Kosár ({count})', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(54, 'en', 'nav.cart_count', 'Cart ({count})', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(55, 'hu', 'filter.title', 'Ár szűrő', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(56, 'en', 'filter.title', 'Price Filter', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(57, 'hu', 'filter.apply', 'Szűrő alkalmazása', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(58, 'en', 'filter.apply', 'Apply Filter', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(59, 'hu', 'cart.drawer.title', 'Kosár', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(60, 'en', 'cart.drawer.title', 'Your Cart', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(61, 'hu', 'cart.drawer.empty', 'A kosár üres', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(62, 'en', 'cart.drawer.empty', 'Your cart is empty', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(63, 'hu', 'cart.drawer.total', 'Összesen:', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(64, 'en', 'cart.drawer.total', 'Total:', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(65, 'hu', 'cart.drawer.checkout', 'Fizetés', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(66, 'en', 'cart.drawer.checkout', 'Checkout', 'shop', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
 
 -- --------------------------------------------------------
 
@@ -480,7 +484,7 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT for table `translations`
 --
 ALTER TABLE `translations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- AUTO_INCREMENT for table `users`
