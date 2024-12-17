@@ -66,6 +66,23 @@ updateUserSession();
             background-color: var(--bs-primary);
             color: white;
             padding: 0 0.4rem;
+            transition: transform 0.3s ease;
+        }
+        
+        @keyframes cartBadgePop {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.5);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .cart-badge-pop {
+            animation: cartBadgePop 0.5s ease;
         }
     </style>
 </head>
