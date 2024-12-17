@@ -55,7 +55,7 @@ while ($row = $stmt->fetch()) {
 include 'layout/header.php';
 
 // Get active tab
-$activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'currency';
+$activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'general';
 ?>
 
 <div class="container-fluid">
@@ -67,6 +67,11 @@ $activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'currency';
 
             <!-- Tabs -->
             <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link <?= $activeTab === 'general' ? 'active' : '' ?>" href="?tab=general">
+                        General Settings
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link <?= $activeTab === 'currency' ? 'active' : '' ?>" href="?tab=currency">
                         Currency Settings
@@ -81,7 +86,19 @@ $activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'currency';
 
             <!-- Tab Content -->
             <div class="tab-content">
-                <?php if ($activeTab === 'currency'): ?>
+                <?php if ($activeTab === 'general'): ?>
+                    <!-- General Settings Tab -->
+                    <div class="tab-pane active">
+                        <div class="card mt-4">
+                            <div class="card-body">
+                                <h5 class="card-title">General Settings</h5>
+                                <p class="text-muted">Configure basic shop settings.</p>
+                                <!-- General settings will be added here -->
+                            </div>
+                        </div>
+                    </div>
+
+                <?php elseif ($activeTab === 'currency'): ?>
                     <!-- Currency Settings Tab -->
                     <div class="tab-pane active">
                         <!-- Currency Settings -->
