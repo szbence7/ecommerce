@@ -4,6 +4,7 @@ ini_set('display_errors', 1);
 
 include 'includes/header.php';
 require_once 'includes/functions.php';
+require_once 'includes/language.php';
 
 // Check if database connection exists
 if (!isset($pdo)) {
@@ -33,12 +34,16 @@ try {
         <!-- Sidebar -->
         <div class="col-md-3">
             <?php include 'includes/price-filter-widget.php'; ?>
-            <h3>Categories</h3>
+            <h3><?= __t('categories.title') ?></h3>
             <ul class="list-group">
                 <?php foreach ($categories as $category): ?>
                     <li class="list-group-item">
                         <a href="category.php?id=<?php echo $category['id']; ?>">
-                            <?php echo htmlspecialchars($category['name']); ?>
+                            <?php 
+                            // Get category translation if available
+                            $translation = getEntityTranslation('category', $category['id'], 'name', $category['name']);
+                            echo htmlspecialchars($translation);
+                            ?>
                         </a>
                     </li>
                 <?php endforeach; ?>
@@ -83,17 +88,33 @@ try {
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             <a href="product.php?id=<?= $product['id'] ?>">
-                                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="card-img-top" alt="<?= htmlspecialchars($product['name']) ?>" style="height: 200px; object-fit: cover;">
+                                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
+                                     class="card-img-top" 
+                                     alt="<?= htmlspecialchars($product['name']) ?>" 
+                                     style="height: 200px; object-fit: cover;">
                             </a>
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">
                                     <a href="product.php?id=<?= $product['id'] ?>" class="text-decoration-none text-dark">
-                                        <?= htmlspecialchars($product['name']) ?>
+                                        <?php 
+                                        // Get product translation if available
+                                        $translation = getEntityTranslation('product', $product['id'], 'name', $product['name']);
+                                        echo htmlspecialchars($translation);
+                                        ?>
                                     </a>
                                 </h5>
-                                <p class="card-text text-muted mb-2"><?= formatPrice($product['price']) ?></p>
+                                <p class="card-text">
+                                    <?php 
+                                    // Get product description translation if available
+                                    $translation = getEntityTranslation('product', $product['id'], 'description', $product['description']);
+                                    echo htmlspecialchars($translation);
+                                    ?>
+                                </p>
+                                <p class="card-text text-muted mb-2">
+                                    <?= __t('product.price', 'shop', ['price' => formatPrice($product['price'])]) ?>
+                                </p>
                                 <button onclick="addToCart(<?= $product['id'] ?>, 1)" class="btn btn-primary mt-auto">
-                                    Add to Cart
+                                    <?= __t('product.addtocart') ?>
                                 </button>
                             </div>
                         </div>
@@ -103,6 +124,8 @@ try {
         </div>
     </div>
 </div>
+
+<?php include 'includes/footer.php'; ?>
 
 <script>
 window.addEventListener('priceRangeChanged', function(e) {
@@ -126,10 +149,11 @@ function addToCart(productId, quantity) {
     .then(data => {
         if (data.success) {
             document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
+            alert('<?= __t('cart.added_success') ?>');
+        } else {
+            alert('<?= __t('cart.added_error') ?>');
         }
     })
     .catch(error => console.error('Error:', error));
 }
 </script>
-
-<?php include 'includes/footer.php'; ?>

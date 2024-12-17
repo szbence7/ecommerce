@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once 'db.php';
 require_once 'functions.php';
+require_once 'language.php';
 
 // Update session with latest user data
 updateUserSession();
@@ -44,11 +45,11 @@ updateUserSession();
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/index.php">Store</a>
+            <a class="navbar-brand" href="/index.php"><?= __t('nav.home') ?></a>
             
             <!-- Search Bar -->
             <div class="search-container">
-                <input type="text" id="searchInput" class="form-control" placeholder="Search products...">
+                <input type="text" id="searchInput" class="form-control" placeholder="<?= __t('nav.search') ?>">
                 <div id="searchResults" class="position-absolute w-100 bg-white shadow-sm" style="display:none; z-index:1000;"></div>
             </div>
 
@@ -58,13 +59,13 @@ updateUserSession();
                     <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>
                         <a href="/ecommerce/admin/index.php" class="btn btn-primary me-2">Admin Panel</a>
                     <?php endif; ?>
-                    <a href="logout.php" class="btn btn-outline-primary me-2">Logout</a>
+                    <a href="logout.php" class="btn btn-outline-primary me-2"><?= __t('nav.logout') ?></a>
                 <?php else: ?>
-                    <a href="login.php" class="btn btn-outline-primary me-2">Login</a>
-                    <a href="register.php" class="btn btn-outline-primary me-2">Register</a>
+                    <a href="login.php" class="btn btn-outline-primary me-2"><?= __t('nav.login') ?></a>
+                    <a href="register.php" class="btn btn-outline-primary me-2"><?= __t('nav.register') ?></a>
                 <?php endif; ?>
                 <button onclick="toggleCart()" class="btn btn-primary">
-                    Cart <span id="cart-count">(<?php echo isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : '0'; ?>)</span>
+                    <?= __t('nav.cart') ?> (<?= isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0 ?>)
                 </button>
             </div>
         </div>
