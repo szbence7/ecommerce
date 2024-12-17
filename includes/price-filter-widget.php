@@ -46,15 +46,27 @@ switch($currentCurrency) {
         $currencySymbol = $currentCurrency;
 }
 
-// Set appropriate step based on currency
-$step = $currentCurrency === 'HUF' ? 100 : 1;
-
-// Round values appropriately based on currency
+// Set appropriate step based on price range for HUF
 if ($currentCurrency === 'HUF') {
-    $min_price = round($min_price / 100) * 100;
-    $max_price = round($max_price / 100) * 100;
-    $current_min = round($current_min / 100) * 100;
-    $current_max = round($current_max / 100) * 100;
+    if ($max_price >= 1000000) {
+        $step = 10000; // 10,000 Ft steps for prices over 1M
+    } elseif ($max_price >= 100000) {
+        $step = 1000;  // 1,000 Ft steps for prices over 100K
+    } elseif ($max_price >= 10000) {
+        $step = 500;   // 500 Ft steps for prices over 10K
+    } else {
+        $step = 100;   // 100 Ft steps for lower prices
+    }
+} else {
+    $step = 1; // Default step for other currencies
+}
+
+// Round values appropriately based on currency and step
+if ($currentCurrency === 'HUF') {
+    $min_price = round($min_price / $step) * $step;
+    $max_price = round($max_price / $step) * $step;
+    $current_min = round($current_min / $step) * $step;
+    $current_max = round($current_max / $step) * $step;
 }
 ?>
 
