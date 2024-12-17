@@ -48,51 +48,36 @@ function updateQuantity(action) {
 }
 
 function updateCartToQuantity() {
-    const targetQuantity = quantity; // A jelenlegi kívánt mennyiség
-    const currentQuantity = <?= isset($_SESSION['cart'][$product['id']]) ? $_SESSION['cart'][$product['id']] : 0 ?>; // A kosárban lévő mennyiség
-    
-    if (targetQuantity === currentQuantity) return; // Ha nincs változás, ne csináljunk semmit
-    
-    const action = targetQuantity > currentQuantity ? 'increase' : 'decrease';
-    const iterations = Math.abs(targetQuantity - currentQuantity);
-    
-    let promises = [];
-    for (let i = 0; i < iterations; i++) {
-        promises.push(
-            fetch('update_cart_quantity.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'product_id=' + currentProductId + '&action=' + action
-            }).then(response => response.json())
-        );
-    }
-    
-    Promise.all(promises)
-        .then(results => {
-            const lastResult = results[results.length - 1];
-            if (lastResult && lastResult.success) {
-                // Update cart count in navbar with animation
-                const cartBadge = document.getElementById('cart-count');
-                if (cartBadge) {
-                    cartBadge.textContent = lastResult.cartCount;
-                    cartBadge.classList.remove('cart-badge-pop');
-                    void cartBadge.offsetWidth;
-                    cartBadge.classList.add('cart-badge-pop');
-                }
-                
-                // Update cart drawer
-                updateCartDrawer();
-                
-                // Show success message
-                showAlert('success', lastResult.message || 'Cart updated successfully');
+    fetch('set_cart_quantity.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'product_id=' + currentProductId + '&quantity=' + quantity
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update cart count in navbar with animation
+            const cartBadge = document.getElementById('cart-count');
+            if (cartBadge) {
+                cartBadge.textContent = data.cartCount;
+                cartBadge.classList.remove('cart-badge-pop');
+                void cartBadge.offsetWidth;
+                cartBadge.classList.add('cart-badge-pop');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('danger', 'Error updating cart');
-        });
+            
+            // Update cart drawer
+            updateCartDrawer();
+            
+            // Show success message
+            showAlert('success', data.message || 'Cart updated successfully');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Error updating cart');
+    });
 }
 </script>
 
