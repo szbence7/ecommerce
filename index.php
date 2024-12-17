@@ -150,22 +150,17 @@ function addToCart(productId) {
             // Frissítjük a kosár számát
             document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
             
-            // Megjelenítjük a sikeres üzenetet
-            alert(data.message);
-            
             // Frissítjük a kosár tartalmát
             const cartDrawer = document.getElementById('cartDrawer');
             if (cartDrawer) {
                 updateCartContents();
             }
         } else {
-            console.error('Server error:', data.debug);  // Debug információ
-            alert(data.message);
+            console.error('Server error:', data.debug);
         }
     })
     .catch(error => {
         console.error('Network error:', error);
-        alert('<?= __t('cart.added_error', 'shop') ?>');
     });
 }
 </script>

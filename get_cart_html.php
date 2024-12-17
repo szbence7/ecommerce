@@ -4,6 +4,10 @@ require_once 'includes/db.php';
 require_once 'includes/functions.php';
 require_once 'includes/language.php';
 
+// Hibakereséshez
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 $response = [
     'cartItems' => '',
     'cartTotal' => '',
@@ -11,10 +15,6 @@ $response = [
 ];
 
 $cartTotal = 0;
-
-// Get current currency and exchange rate
-$currentCurrency = getShopCurrency();
-$rate = getExchangeRate($currentCurrency);
 
 if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
     $productIds = array_keys($_SESSION['cart']);
@@ -27,14 +27,15 @@ if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
         LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language_code = ?
         WHERE p.id IN ($placeholders)
     ");
-    $params = array_merge([getLanguageCode()], $productIds);
+    $params = array_merge([getCurrentLanguage()], $productIds);
     $stmt->execute($params);
     $cartProducts = $stmt->fetchAll();
 
     $cartHtml = '';
     foreach ($cartProducts as $product) {
         $quantity = $_SESSION['cart'][$product['id']];
-        $price = $product['price'] * $rate;
+        // Az ár már forintban van tárolva
+        $price = $product['price'];
         $subtotal = $price * $quantity;
         $cartTotal += $subtotal;
 
@@ -59,7 +60,7 @@ if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
     $response['cartItems'] = $cartHtml;
     $response['showCheckoutButton'] = true;
 } else {
-    $response['cartItems'] = '<p class="text-center">' . __t('cart.drawer.empty') . '</p>';
+    $response['cartItems'] = '<p class="text-center">' . __t('cart.drawer.empty', 'shop') . '</p>';
 }
 
 $response['cartTotal'] = formatPrice($cartTotal);
