@@ -1,17 +1,47 @@
 <?php
 function getShopCurrency() {
+    // First check session
+    if (isset($_SESSION['currency'])) {
+        return $_SESSION['currency'];
+    }
+    
+    // If not in session, get from database
     global $pdo;
     $stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'currency'");
-    return $stmt->fetchColumn() ?: 'EUR';  // Default to EUR instead of HUF
+    $dbCurrency = $stmt->fetchColumn();
+    
+    // Store in session and return
+    if ($dbCurrency) {
+        $_SESSION['currency'] = $dbCurrency;
+        return $dbCurrency;
+    }
+    
+    return 'HUF'; // Default to HUF if not set
 }
 
 function getExchangeRate($currency) {
     global $pdo;
-    if ($currency === 'EUR') return 1.00;  // EUR is our base currency
     
+    // Base currency always has rate of 1
+    if ($currency === 'EUR') return 1.00;
+    
+    // Try to get rate from database first
     $stmt = $pdo->prepare("SELECT rate FROM exchange_rates WHERE currency = ?");
     $stmt->execute([$currency]);
-    return $stmt->fetchColumn() ?: 1.00;
+    $rate = $stmt->fetchColumn();
+    
+    if ($rate) {
+        return (float)$rate;
+    }
+    
+    // If not in database, try to get from config
+    $currencyConfig = json_decode(file_get_contents(__DIR__ . '/../config/currencies.json'), true);
+    if ($currencyConfig && isset($currencyConfig['currencies'][$currency]['default_rate'])) {
+        return (float)$currencyConfig['currencies'][$currency]['default_rate'];
+    }
+    
+    // Default to 1 if no rate found
+    return 1.00;
 }
 
 function formatPrice($price, $forceCurrency = null) {
