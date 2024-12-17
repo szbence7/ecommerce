@@ -106,7 +106,7 @@ function addToCart(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
+            document.getElementById('cart-count').textContent = data.cartCount;
         }
     })
     .catch(error => console.error('Error:', error));

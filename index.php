@@ -148,7 +148,7 @@ function addToCart(productId) {
     .then(data => {
         if (data.success) {
             // Frissítjük a kosár számát
-            document.getElementById('cart-count').textContent = '(' + data.cartCount + ')';
+            document.getElementById('cart-count').textContent = data.cartCount;
             
             // Frissítjük a kosár tartalmát
             const cartDrawer = document.getElementById('cartDrawer');
