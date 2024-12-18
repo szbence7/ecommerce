@@ -25,15 +25,25 @@ if (isset($_GET['delete'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add'])) {
         $name = $_POST['name'];
-        $description = $_POST['description'];
+        $short_description = $_POST['short_description'];
         $price = $_POST['price'];
         $category_id = $_POST['category_id'];
         $image = $_POST['image'];
 
-        $stmt = $pdo->prepare("INSERT INTO products (name, description, price, category_id, image) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $description, $price, $category_id, $image]);
-        header('Location: products.php');
-        exit();
+        $stmt = $pdo->prepare("INSERT INTO products (name, short_description, price, category_id, image) VALUES (?, ?, ?, ?, ?)");
+        if ($stmt->execute([$name, $short_description, $price, $category_id, $image])) {
+            $product_id = $pdo->lastInsertId();
+            
+            // Insert translations
+            $stmt = $pdo->prepare("INSERT INTO product_translations (product_id, language_code, name, short_description) VALUES (?, ?, ?, ?)");
+            // Insert Hungarian translation
+            $stmt->execute([$product_id, 'hu', $name, $short_description]);
+            // Insert English translation
+            $stmt->execute([$product_id, 'en', $name, $short_description]);
+            
+            header('Location: products.php');
+            exit();
+        }
     }
     
     // Termék szerkesztése
@@ -41,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $id = $_POST['id'];
             $name = $_POST['name'];
-            $description = $_POST['description'];
+            $short_description = $_POST['short_description'];
             $price = $_POST['price'];
             $category_id = $_POST['category_id'];
             $image = $_POST['image'];
@@ -58,10 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("Discount price: " . $discount_price);
             error_log("Discount end time: " . $discount_end_time);
 
+            // Update products table
             $stmt = $pdo->prepare("
                 UPDATE products 
                 SET name = ?,
-                    description = ?,
+                    short_description = ?,
                     price = ?,
                     category_id = ?,
                     image = ?,
@@ -71,9 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 WHERE id = ?
             ");
 
-            $params = [
+            $stmt->execute([
                 $name,
-                $description,
+                $short_description,
                 $price,
                 $category_id,
                 $image,
@@ -81,9 +92,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $discount_price,
                 $discount_end_time,
                 $id
-            ];
+            ]);
 
-            $stmt->execute($params);
+            // Update translations
+            $stmt = $pdo->prepare("
+                UPDATE product_translations 
+                SET name = ?,
+                    short_description = ?
+                WHERE product_id = ?
+            ");
+            $stmt->execute([$name, $short_description, $id]);
             
             set_alert("Product updated successfully!", "success");
             header('Location: products.php');
@@ -107,9 +125,11 @@ $stmt = $pdo->query("SELECT * FROM categories");
 $categories = $stmt->fetchAll();
 
 // Termékek lekérése
-$stmt = $pdo->query("SELECT products.*, categories.name as category_name 
-                     FROM products 
-                     LEFT JOIN categories ON products.category_id = categories.id");
+$stmt = $pdo->query("SELECT p.*, c.name as category_name, pt.short_description 
+                     FROM products p 
+                     LEFT JOIN categories c ON p.category_id = c.id
+                     LEFT JOIN product_translations pt ON p.id = pt.product_id 
+                     AND pt.language_code = 'hu'");
 $products = $stmt->fetchAll();
 ?>
 
@@ -138,8 +158,9 @@ $products = $stmt->fetchAll();
                             <input type="text" name="name" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea name="description" class="form-control" required></textarea>
+                            <label class="form-label">Short Description</label>
+                            <input type="text" name="short_description" class="form-control" maxlength="255" required>
+                            <small class="text-muted">A brief description of the product (max 255 characters)</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Price (EUR)</label>
@@ -183,7 +204,7 @@ $products = $stmt->fetchAll();
                             <th>ID</th>
                             <th>Akció</th>
                             <th>Name</th>
-                            <th>Description</th>
+                            <th>Short Description</th>
                             <th>Price</th>
                             <th>Category</th>
                             <th>Image</th>
@@ -210,7 +231,7 @@ $products = $stmt->fetchAll();
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($product['name']); ?></td>
-                                <td><?php echo htmlspecialchars($product['description']); ?></td>
+                                <td><?php echo htmlspecialchars($product['short_description']); ?></td>
                                 <td>
                                     <?php if ($product['is_on_sale'] == 1 && $product['discount_price'] !== null): ?>
                                         <div class="text-decoration-line-through text-muted small"><?php echo formatPrice($product['price']); ?></div>
@@ -256,8 +277,9 @@ $products = $stmt->fetchAll();
                                     <input type="text" name="name" id="edit_name" class="form-control" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Description</label>
-                                    <textarea name="description" id="edit_description" class="form-control" required></textarea>
+                                    <label class="form-label">Short Description</label>
+                                    <input type="text" name="short_description" id="edit_short_description" class="form-control" maxlength="255" required>
+                                    <small class="text-muted">A brief description of the product (max 255 characters)</small>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Price (EUR)</label>
@@ -327,7 +349,7 @@ $products = $stmt->fetchAll();
             function editProduct(product) {
                 document.getElementById('edit_id').value = product.id;
                 document.getElementById('edit_name').value = product.name;
-                document.getElementById('edit_description').value = product.description;
+                document.getElementById('edit_short_description').value = product.short_description || '';
                 document.getElementById('edit_price').value = product.price;
                 document.getElementById('edit_category_id').value = product.category_id;
                 document.getElementById('edit_image').value = product.image;
