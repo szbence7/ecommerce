@@ -50,13 +50,13 @@ $currentQuantity = isset($_SESSION['cart'][$product['id']]) ? $_SESSION['cart'][
                             <button onclick="updateQuantity('decrease')" 
                                     class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" 
                                     style="width: 38px; height: 38px;">
-                                <i class="fas fa-minus"></i>
+                                <i data-lucide="minus" style="color: #212529;"></i>
                             </button>
                             <span id="quantity" class="fs-4 fw-semibold"><?= $currentQuantity ?></span>
                             <button onclick="updateQuantity('increase')" 
                                     class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" 
                                     style="width: 38px; height: 38px;">
-                                <i class="fas fa-plus"></i>
+                                <i data-lucide="plus" style="color: #212529;"></i>
                             </button>
                         </div>
                     </div>
