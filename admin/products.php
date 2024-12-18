@@ -168,6 +168,14 @@ $products = $stmt->fetchAll();
                                 </td>
                             </tr>
                         <?php endforeach; ?>
+                        <tr id="no-results" style="display: none;">
+                            <td colspan="8" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i data-lucide="search-x" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;"></i>
+                                    Nincs találat
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -339,6 +347,7 @@ $products = $stmt->fetchAll();
             // Keresés funkcionalitás
 let searchTimeout;
 const searchInput = document.getElementById('product_search');
+const noResults = document.getElementById('no-results');
                 
 if (searchInput) {
     searchInput.addEventListener('input', function() {
@@ -353,6 +362,7 @@ if (searchInput) {
             document.querySelectorAll('table tbody tr').forEach(tr => {
                 tr.style.display = '';
             });
+            noResults.style.display = 'none';
         }
     });
 }
@@ -366,7 +376,7 @@ function searchProducts(query) {
             return response.json();
         })
         .then(products => {
-            const rows = document.querySelectorAll('table tbody tr');
+            const rows = document.querySelectorAll('table tbody tr:not(#no-results)');
                             
             // Minden sort elrejtünk először
             rows.forEach(row => {
@@ -374,7 +384,7 @@ function searchProducts(query) {
             });
                             
             // Csak a találatokat jelenítjük meg
-            if (Array.isArray(products)) {
+            if (Array.isArray(products) && products.length > 0) {
                 products.forEach(product => {
                     if (product && product.id) {
                         const productRow = document.querySelector(`tr[data-product-id="${product.id}"]`);
@@ -383,14 +393,19 @@ function searchProducts(query) {
                         }
                     }
                 });
+                noResults.style.display = 'none';
+            } else {
+                // Ha nincs találat, megjelenítjük az üzenetet
+                noResults.style.display = '';
             }
         })
         .catch(error => {
             console.error('Error:', error);
             // Hiba esetén minden sort megjelenítünk
-            document.querySelectorAll('table tbody tr').forEach(tr => {
+            document.querySelectorAll('table tbody tr:not(#no-results)').forEach(tr => {
                 tr.style.display = '';
             });
+            noResults.style.display = 'none';
         });
 }
             </script>
