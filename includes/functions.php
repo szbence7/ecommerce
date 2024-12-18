@@ -73,11 +73,14 @@ function convertToEUR($price, $fromCurrency) {
 }
 
 function updateUserSession() {
-    if (!isset($_SESSION['user_id'])) return;
-    
     global $pdo;
+    
+    if (!isset($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
+        return;
+    }
+    
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-    $stmt->execute([$_SESSION['user_id']]);
+    $stmt->execute([$_SESSION['user']['id']]);
     $user = $stmt->fetch();
     
     if ($user) {
@@ -85,7 +88,7 @@ function updateUserSession() {
             'id' => $user['id'],
             'email' => $user['email'],
             'name' => $user['name'],
-            'role' => $user['role']
+            'role' => $user['role'] ?? 'customer' // Set default role if not set
         ];
     }
 }
