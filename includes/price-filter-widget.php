@@ -6,7 +6,9 @@ require_once 'language.php';
 
 try {
     // Get prices in EUR from database
-    $stmt = $pdo->query("SELECT MIN(price) as min_price, MAX(price) as max_price FROM products");
+    $stmt = $pdo->query("SELECT MIN(CASE WHEN is_on_sale = 1 THEN discount_price ELSE price END) as min_price, 
+                   MAX(CASE WHEN is_on_sale = 1 THEN discount_price ELSE price END) as max_price 
+            FROM products");
     $prices = $stmt->fetch(PDO::FETCH_ASSOC);
     $min_price = floor($prices['min_price']);
     $max_price = ceil($prices['max_price']);
@@ -28,22 +30,6 @@ try {
     $max_price = 1000000;
     $current_min = $min_price;
     $current_max = $max_price;
-}
-
-// Get currency symbol
-$currencySymbol = '';
-switch($currentCurrency) {
-    case 'EUR':
-        $currencySymbol = '€';
-        break;
-    case 'HUF':
-        $currencySymbol = 'Ft';
-        break;
-    case 'USD':
-        $currencySymbol = '$';
-        break;
-    default:
-        $currencySymbol = $currentCurrency;
 }
 
 // Set appropriate step based on price range for HUF
@@ -78,8 +64,8 @@ if ($currentCurrency === 'HUF') {
         <div class="price-filter">
             <div class="price-range-slider">
                 <div class="values">
-                    <span id="minPriceLabel"><?= number_format($current_min, 0, '.', ' ') . ' ' . $currencySymbol ?></span> -
-                    <span id="maxPriceLabel"><?= number_format($current_max, 0, '.', ' ') . ' ' . $currencySymbol ?></span>
+                    <span id="minPriceLabel"><?= formatPrice($current_min) ?></span> -
+                    <span id="maxPriceLabel"><?= formatPrice($current_max) ?></span>
                 </div>
                 <div class="slider-container">
                     <input type="range" class="range-min" id="priceMin" min="<?= $min_price ?>" max="<?= $max_price ?>" step="<?= $step ?>" value="<?= $current_min ?>">
@@ -152,12 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const maxPriceInput = document.getElementById('priceMax');
     const minLabel = document.getElementById('minPriceLabel');
     const maxLabel = document.getElementById('maxPriceLabel');
-    const currencySymbol = '<?= $currencySymbol ?>';
     const step = <?= $step ?>;
-
-    function formatPrice(price) {
-        return Math.round(price).toLocaleString() + ' ' + currencySymbol;
-    }
 
     function updateLabels() {
         const minVal = parseFloat(minPriceInput.value);
@@ -171,8 +152,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        minLabel.textContent = formatPrice(parseFloat(minPriceInput.value));
-        maxLabel.textContent = formatPrice(parseFloat(maxPriceInput.value));
+        // Használjuk a PHP formatPrice függvényt AJAX-szal
+        fetch(`format_price.php?price=${minPriceInput.value}`)
+            .then(response => response.text())
+            .then(formattedPrice => {
+                minLabel.textContent = formattedPrice;
+            });
+            
+        fetch(`format_price.php?price=${maxPriceInput.value}`)
+            .then(response => response.text())
+            .then(formattedPrice => {
+                maxLabel.textContent = formattedPrice;
+            });
     }
 
     function applyFilter() {
@@ -183,6 +174,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         window.dispatchEvent(event);
+        
+        // Frissítjük az URL-t és újratöltjük az oldalt
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('min_price', minPriceInput.value);
+        urlParams.set('max_price', maxPriceInput.value);
+        window.location.search = urlParams.toString();
     }
 
     // Update labels while dragging
