@@ -80,7 +80,13 @@ try {
                     }
                 }
 
-                $sql = "SELECT * FROM products WHERE $where ORDER BY id DESC";
+                $sql = "SELECT p.*, pt.short_description, pt.name as translated_name 
+                        FROM products p 
+                        LEFT JOIN product_translations pt ON p.id = pt.product_id 
+                        AND pt.language_code = :lang_code 
+                        WHERE $where 
+                        ORDER BY p.id DESC";
+                $params[':lang_code'] = getCurrentLanguage();
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
                 $products = $stmt->fetchAll();
@@ -95,26 +101,16 @@ try {
                                     <?php endif; ?>
                                     <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
                                          class="card-img-top" 
-                                         alt="<?= htmlspecialchars($product['name']) ?>" 
+                                         alt="<?= htmlspecialchars($product['translated_name'] ?? $product['name']) ?>" 
                                          style="height: 200px; object-fit: cover;">
                                 </div>
                             </a>
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">
-                                    <a href="product.php?id=<?= $product['id'] ?>" class="text-decoration-none text-dark">
-                                        <?php 
-                                        // Get product translation if available
-                                        $translation = getEntityTranslation('product', $product['id'], 'name', $product['name']);
-                                        echo htmlspecialchars($translation);
-                                        ?>
-                                    </a>
+                                    <?= htmlspecialchars($product['translated_name'] ?? $product['name']) ?>
                                 </h5>
                                 <p class="card-text flex-grow-1">
-                                    <?php 
-                                    // Get product translation if available
-                                    $translation = getEntityTranslation('product', $product['id'], 'description', $product['description']);
-                                    echo htmlspecialchars(substr($translation, 0, 100)) . '...'; 
-                                    ?>
+                                    <?= htmlspecialchars($product['short_description']) ?>
                                 </p>
                                 <div class="mt-auto">
                                     <?php if ($product['is_on_sale'] && $product['discount_price']): ?>

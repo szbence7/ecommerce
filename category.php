@@ -14,12 +14,22 @@ if (!$category) {
 }
 
 // Termékek lekérése a kategóriához
-$stmt = $pdo->prepare('SELECT * FROM products WHERE category_id = ?');
-$stmt->execute([$_GET['id']]);
+$stmt = $pdo->prepare('SELECT p.*, pt.short_description, pt.name as translated_name 
+                       FROM products p 
+                       LEFT JOIN product_translations pt ON p.id = pt.product_id 
+                       AND pt.language_code = :lang_code 
+                       WHERE p.category_id = :category_id');
+$stmt->execute([
+    ':category_id' => $_GET['id'],
+    ':lang_code' => getCurrentLanguage()
+]);
 $products = $stmt->fetchAll();
 
 ?>
-<h2><?php echo htmlspecialchars($category['name']); ?></h2>
+<h2><?php 
+    $categoryName = getEntityTranslation('category', $category['id'], 'name', $category['name']);
+    echo htmlspecialchars($categoryName); 
+?></h2>
 
 <div class="row">
     <?php foreach ($products as $product): ?>
@@ -31,12 +41,12 @@ $products = $stmt->fetchAll();
                     <?php endif; ?>
                     <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
                          class="card-img-top" 
-                         alt="<?php echo htmlspecialchars($product['name']); ?>"
+                         alt="<?php echo htmlspecialchars($product['translated_name'] ?? $product['name']); ?>"
                          style="height: 200px; object-fit: cover;">
                 </div>
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
-                    <p class="card-text flex-grow-1"><?php echo htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?></p>
+                    <h5 class="card-title"><?php echo htmlspecialchars($product['translated_name'] ?? $product['name']); ?></h5>
+                    <p class="card-text flex-grow-1"><?php echo htmlspecialchars($product['short_description']); ?></p>
                     <div class="mt-auto">
                         <?php if ($product['is_on_sale'] && $product['discount_price']): ?>
                             <p class="card-text mb-2">
