@@ -3,6 +3,7 @@ require_once 'auth_check.php';
 session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/components/alert.php';
 
 // Check admin access
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
@@ -10,8 +11,24 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
     exit();
 }
 
+// Check for expired discounts
+$currentDateTime = date('Y-m-d H:i:s');
+$stmt = $pdo->prepare("
+    UPDATE products 
+    SET is_on_sale = 0, 
+        discount_price = NULL, 
+        discount_end_time = NULL 
+    WHERE is_on_sale = 1 
+    AND discount_end_time IS NOT NULL 
+    AND discount_end_time <= ?
+");
+$stmt->execute([$currentDateTime]);
+$updatedCount = $stmt->rowCount();
+if ($updatedCount > 0) {
+    error_log("Updated $updatedCount products with expired discounts at $currentDateTime");
+}
+
 include 'layout/header.php';
-require_once '../includes/functions.php';
 
 // Termék törlése
 if (isset($_GET['delete'])) {
@@ -38,19 +55,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Termék szerkesztése
     if (isset($_POST['edit'])) {
-        $id = $_POST['id'];
-        $name = $_POST['name'];
-        $description = $_POST['description'];
-        $price = $_POST['price'];
-        $category_id = $_POST['category_id'];
-        $image = $_POST['image'];
-        $is_on_sale = isset($_POST['is_on_sale']) ? 1 : 0;
-        $discount_price = $is_on_sale ? $_POST['discount_price'] : null;
+        try {
+            $id = $_POST['id'];
+            $name = $_POST['name'];
+            $description = $_POST['description'];
+            $price = $_POST['price'];
+            $category_id = $_POST['category_id'];
+            $image = $_POST['image'];
+            $is_on_sale = isset($_POST['is_on_sale']) ? 1 : 0;
+            $discount_price = $is_on_sale ? $_POST['discount_price'] : null;
+            $discount_end_time = !empty($_POST['discount_end_time']) ? $_POST['discount_end_time'] : null;
 
-        $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, image = ?, is_on_sale = ?, discount_price = ? WHERE id = ?");
-        $stmt->execute([$name, $description, $price, $category_id, $image, $is_on_sale, $discount_price, $id]);
-        header('Location: products.php');
-        exit();
+            // Debug
+            error_log("Updating product with data:");
+            error_log("ID: " . $id);
+            error_log("Name: " . $name);
+            error_log("Price: " . $price);
+            error_log("Is on sale: " . $is_on_sale);
+            error_log("Discount price: " . $discount_price);
+            error_log("Discount end time: " . $discount_end_time);
+
+            $stmt = $pdo->prepare("
+                UPDATE products 
+                SET name = ?,
+                    description = ?,
+                    price = ?,
+                    category_id = ?,
+                    image = ?,
+                    is_on_sale = ?,
+                    discount_price = ?,
+                    discount_end_time = ?
+                WHERE id = ?
+            ");
+
+            $params = [
+                $name,
+                $description,
+                $price,
+                $category_id,
+                $image,
+                $is_on_sale,
+                $discount_price,
+                $discount_end_time,
+                $id
+            ];
+
+            $stmt->execute($params);
+            
+            set_alert("Product updated successfully!", "success");
+            header('Location: products.php');
+            exit();
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            set_alert("Error updating product: " . $e->getMessage(), "error");
+            header('Location: products.php');
+            exit();
+        } catch (Exception $e) {
+            error_log("General error: " . $e->getMessage());
+            set_alert("An unexpected error occurred: " . $e->getMessage(), "error");
+            header('Location: products.php');
+            exit();
+        }
     }
 }
 
@@ -70,6 +135,7 @@ $products = $stmt->fetchAll();
         <?php include 'layout/sidebar.php'; ?>
         
         <div class="col-md-10" id="content">
+            <?php display_alert(); ?>
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>Products</h2>
                 <button class="btn btn-primary" onclick="toggleNewProductForm()">
@@ -242,6 +308,10 @@ $products = $stmt->fetchAll();
                                         <input type="number" name="discount_price" id="edit_discount_price" class="form-control" step="0.01">
                                     </div>
                                 </div>
+                                <div class="mb-3" id="discount_end_time_container" style="display: none;">
+                                    <label class="form-label">Discount End Time</label>
+                                    <input type="datetime-local" name="discount_end_time" id="edit_discount_end_time" class="form-control">
+                                </div>
                                 <div class="mb-3">
                                     <label class="form-label">Category</label>
                                     <select name="category_id" id="edit_category_id" class="form-select" required>
@@ -271,6 +341,7 @@ $products = $stmt->fetchAll();
                 document.getElementById('edit_image').value = product.image;
                 document.getElementById('edit_is_on_sale').checked = product.is_on_sale == 1;
                 document.getElementById('edit_discount_price').value = product.discount_price;
+                document.getElementById('edit_discount_end_time').value = product.discount_end_time ? product.discount_end_time.slice(0, 16) : '';
                 document.getElementById('custom_discount_percentage').value = '';
                 toggleDiscountPrice();
                 
@@ -282,17 +353,21 @@ $products = $stmt->fetchAll();
                 const isOnSale = document.getElementById('edit_is_on_sale').checked;
                 const discountContainer = document.getElementById('discount_price_container');
                 const percentageContainer = document.getElementById('discount_percentage_container');
+                const endTimeContainer = document.getElementById('discount_end_time_container');
                 const discountInput = document.getElementById('edit_discount_price');
                 const customPercentageInput = document.getElementById('custom_discount_percentage');
                 
                 if (isOnSale) {
                     discountContainer.style.display = 'block';
                     percentageContainer.style.display = 'block';
+                    endTimeContainer.style.display = 'block';
                 } else {
                     discountContainer.style.display = 'none';
                     percentageContainer.style.display = 'none';
+                    endTimeContainer.style.display = 'none';
                     discountInput.value = '';
                     customPercentageInput.value = '';
+                    document.getElementById('edit_discount_end_time').value = '';
                     // Uncheck all radio buttons
                     document.querySelectorAll('input[name="discount_percentage"]').forEach(radio => {
                         radio.checked = false;

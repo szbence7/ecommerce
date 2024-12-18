@@ -1,0 +1,9 @@
+# Run discount checker every minute to update expired product discounts
+* * * * * /usr/bin/php /www/wwwroot/your-domain.com/admin/check_discount_expiry.php
+
+# Alternatively, if using the shell script:
+# * * * * * /www/wwwroot/your-domain.com/admin/check_discounts.sh
+
+# Note: Replace 'your-domain.com' with your actual domain name
+# Make sure to set proper permissions:
+# chmod +x /www/wwwroot/your-domain.com/admin/check_discounts.sh

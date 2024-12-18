@@ -173,6 +173,7 @@ CREATE TABLE `products` (
   `price` decimal(10,2) NOT NULL,
   `discount_price` decimal(10,2) DEFAULT NULL,
   `is_on_sale` tinyint(1) DEFAULT 0,
+  `discount_end_time` DATETIME DEFAULT NULL,
   `category_id` int(11) DEFAULT NULL,
   `image` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
@@ -182,19 +183,19 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`id`, `name`, `description`, `price`, `discount_price`, `is_on_sale`, `category_id`, `image`, `created_at`) VALUES
-(1, 'iPhone 14 Pro', 'Latest Apple smartphone with advanced features', 999.99, 899.99, 1, 1, 'iphone14pro.jpg', '2024-12-16 15:23:58'),
-(2, 'Samsung 4K TV', '55-inch Smart LED TV with HDR', 699.99, NULL, 0, 1, 'samsung-tv.jpg', '2024-12-16 15:23:58'),
-(3, 'MacBook Air M2', '13-inch laptop with Apple M2 chip', 1299.99, NULL, 0, 1, 'macbook-air.jpg', '2024-12-16 15:23:58'),
-(4, 'Classic Blue Jeans', 'Comfortable cotton denim jeans', 49.99, NULL, 0, 2, 'blue-jeans.jpg', '2024-12-16 15:23:58'),
-(5, 'White Sneakers', 'Casual athletic shoes', 79.99, NULL, 0, 2, 'white-sneakers.jpg', '2024-12-16 15:23:58'),
-(6, 'Cotton T-Shirt', 'Basic crew neck t-shirt', 19.99, NULL, 0, 2, 'tshirt.jpg', '2024-12-16 15:23:58'),
-(7, 'The Art of Programming', 'Comprehensive guide to programming', 59.99, NULL, 0, 3, 'programming-book.jpg', '2024-12-16 15:23:58'),
-(8, 'Cooking Basics', 'Learn to cook like a chef', 29.99, NULL, 0, 3, 'cooking-book.jpg', '2024-12-16 15:23:58'),
-(9, 'Science Fiction Collection', 'Best sci-fi stories of 2023', 39.99, NULL, 0, 3, 'scifi-book.jpg', '2024-12-16 15:23:58'),
-(10, 'Garden Tool Set', 'Complete set of essential garden tools', 89.99, NULL, 0, 4, 'garden-tools.jpg', '2024-12-16 15:23:58'),
-(11, 'Smart LED Bulb', 'WiFi-enabled color changing bulb', 29.99, NULL, 0, 4, 'led-bulb.jpg', '2024-12-16 15:23:58'),
-(12, 'Throw Pillows Set', 'Decorative pillows for your couch', 44.99, NULL, 0, 4, 'pillows.jpg', '2024-12-16 15:23:58');
+INSERT INTO `products` (`id`, `name`, `description`, `price`, `discount_price`, `is_on_sale`, `discount_end_time`, `category_id`, `image`, `created_at`) VALUES
+(1, 'iPhone 14 Pro', 'Latest Apple smartphone with advanced features', 999.99, 899.99, 1, NULL, 1, 'iphone14pro.jpg', '2024-12-16 15:23:58'),
+(2, 'Samsung 4K TV', '55-inch Smart LED TV with HDR', 699.99, NULL, 0, NULL, 1, 'samsung-tv.jpg', '2024-12-16 15:23:58'),
+(3, 'MacBook Air M2', '13-inch laptop with Apple M2 chip', 1299.99, NULL, 0, NULL, 1, 'macbook-air.jpg', '2024-12-16 15:23:58'),
+(4, 'Classic Blue Jeans', 'Comfortable cotton denim jeans', 49.99, NULL, 0, NULL, 2, 'blue-jeans.jpg', '2024-12-16 15:23:58'),
+(5, 'White Sneakers', 'Casual athletic shoes', 79.99, NULL, 0, NULL, 2, 'white-sneakers.jpg', '2024-12-16 15:23:58'),
+(6, 'Cotton T-Shirt', 'Basic crew neck t-shirt', 19.99, NULL, 0, NULL, 2, 'tshirt.jpg', '2024-12-16 15:23:58'),
+(7, 'The Art of Programming', 'Comprehensive guide to programming', 59.99, NULL, 0, NULL, 3, 'programming-book.jpg', '2024-12-16 15:23:58'),
+(8, 'Cooking Basics', 'Learn to cook like a chef', 29.99, NULL, 0, NULL, 3, 'cooking-book.jpg', '2024-12-16 15:23:58'),
+(9, 'Science Fiction Collection', 'Best sci-fi stories of 2023', 39.99, NULL, 0, NULL, 3, 'scifi-book.jpg', '2024-12-16 15:23:58'),
+(10, 'Garden Tool Set', 'Complete set of essential garden tools', 89.99, NULL, 0, NULL, 4, 'garden-tools.jpg', '2024-12-16 15:23:58'),
+(11, 'Smart LED Bulb', 'WiFi-enabled color changing bulb', 29.99, NULL, 0, NULL, 4, 'led-bulb.jpg', '2024-12-16 15:23:58'),
+(12, 'Throw Pillows Set', 'Decorative pillows for your couch', 44.99, NULL, 0, NULL, 4, 'pillows.jpg', '2024-12-16 15:23:58');
 
 -- --------------------------------------------------------
 
