@@ -4,6 +4,18 @@ session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
+// Get current language from settings
+$stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'admin_language'");
+$stmt->execute();
+$language = $stmt->fetchColumn() ?: 'en';
+
+// Function to get translation
+function getTranslation($key, $language, $pdo) {
+    $stmt = $pdo->prepare("SELECT translation_value FROM translations WHERE language_code = ? AND translation_key = ? AND context = 'admin' LIMIT 1");
+    $stmt->execute([$language, $key]);
+    return $stmt->fetchColumn() ?: $key;
+}
+
 // Check admin access
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
     header('Location: /login.php');
@@ -73,7 +85,7 @@ function getOrderStatusBadgeClass($status) {
         
         <div class="col-md-10" id="content">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><?php echo __t('admin.orders.title', 'admin'); ?></h2>
+                <h2><?php echo getTranslation('admin.orders.title', $language, $pdo); ?></h2>
             </div>
 
             <!-- Search Bar -->
@@ -82,9 +94,9 @@ function getOrderStatusBadgeClass($status) {
                     <div class="row">
                         <div class="col-md-6">
                             <div class="input-group">
-                                <input type="text" id="searchInput" class="form-control" placeholder="<?php echo __t('admin.orders.search.placeholder', 'admin'); ?>">
+                                <input type="text" id="searchInput" class="form-control" placeholder="<?php echo getTranslation('admin.orders.search.placeholder', $language, $pdo); ?>">
                                 <button class="btn btn-outline-secondary" type="button" onclick="searchOrders()">
-                                    <?php echo __t('admin.orders.search.button', 'admin'); ?>
+                                    <?php echo getTranslation('admin.orders.search.button', $language, $pdo); ?>
                                 </button>
                             </div>
                         </div>
@@ -97,15 +109,15 @@ function getOrderStatusBadgeClass($status) {
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Rendelési szám</th>
-                            <th>Vásárló</th>
-                            <th>Szállítási mód</th>
-                            <th>Fizetési mód</th>
-                            <th>Fizetési státusz</th>
-                            <th>Rendelés státusza</th>
-                            <th>Összeg</th>
-                            <th>Dátum</th>
-                            <th>Műveletek</th>
+                            <th><?php echo getTranslation('admin.orders.table.order_number', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.customer', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.shipping_method', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.payment_method', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.payment_status', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.order_status', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.total', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.date', $language, $pdo); ?></th>
+                            <th><?php echo getTranslation('admin.orders.table.actions', $language, $pdo); ?></th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
@@ -116,43 +128,20 @@ function getOrderStatusBadgeClass($status) {
                                     <?php echo htmlspecialchars($order['customer_name']); ?><br>
                                     <small class="text-muted"><?php echo htmlspecialchars($order['customer_email']); ?></small>
                                 </td>
-                                <td><?php 
-                                    $shipping_methods = [
-                                        'personal' => 'Személyes átvétel',
-                                        'gls' => 'GLS futár',
-                                        'dpd' => 'DPD futár',
-                                        'mpl' => 'MPL futár',
-                                        'automat' => 'Csomagautomata'
-                                    ];
-                                    echo $shipping_methods[$order['shipping_method']] ?? $order['shipping_method'];
-                                ?></td>
-                                <td><?php 
-                                    $payment_methods = [
-                                        'card' => 'Bankkártya',
-                                        'transfer' => 'Átutalás',
-                                        'cash_on_delivery' => 'Utánvét'
-                                    ];
-                                    echo $payment_methods[$order['payment_method']] ?? $order['payment_method'];
-                                ?></td>
+                                <td><?php echo getTranslation('admin.orders.shipping.' . $order['shipping_method'], $language, $pdo); ?></td>
+                                <td><?php echo getTranslation('admin.orders.payment.' . $order['payment_method'], $language, $pdo); ?></td>
                                 <td><span class="badge <?php echo getPaymentStatusBadgeClass($order['payment_status']); ?>">
-                                    <?php 
-                                        $payment_statuses = [
-                                            'paid' => 'Fizetve',
-                                            'pending_payment' => 'Fizetésre vár',
-                                            'cash_on_delivery' => 'Utánvét'
-                                        ];
-                                        echo $payment_statuses[$order['payment_status']] ?? $order['payment_status'];
-                                    ?>
+                                    <?php echo getTranslation('admin.orders.payment_status.' . $order['payment_status'], $language, $pdo); ?>
                                 </span></td>
                                 <td>
                                     <form method="POST" class="d-inline">
                                         <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                         <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                            <option value="pending" <?php echo $order['status'] == 'pending' ? 'selected' : ''; ?>>Függőben</option>
-                                            <option value="processing" <?php echo $order['status'] == 'processing' ? 'selected' : ''; ?>>Feldolgozás alatt</option>
-                                            <option value="shipped" <?php echo $order['status'] == 'shipped' ? 'selected' : ''; ?>>Kiszállítva</option>
-                                            <option value="delivered" <?php echo $order['status'] == 'delivered' ? 'selected' : ''; ?>>Kézbesítve</option>
-                                            <option value="cancelled" <?php echo $order['status'] == 'cancelled' ? 'selected' : ''; ?>>Törölve</option>
+                                            <option value="pending" <?php echo $order['status'] == 'pending' ? 'selected' : ''; ?>><?php echo getTranslation('admin.orders.status.pending', $language, $pdo); ?></option>
+                                            <option value="processing" <?php echo $order['status'] == 'processing' ? 'selected' : ''; ?>><?php echo getTranslation('admin.orders.status.processing', $language, $pdo); ?></option>
+                                            <option value="shipped" <?php echo $order['status'] == 'shipped' ? 'selected' : ''; ?>><?php echo getTranslation('admin.orders.status.shipped', $language, $pdo); ?></option>
+                                            <option value="delivered" <?php echo $order['status'] == 'delivered' ? 'selected' : ''; ?>><?php echo getTranslation('admin.orders.status.delivered', $language, $pdo); ?></option>
+                                            <option value="cancelled" <?php echo $order['status'] == 'cancelled' ? 'selected' : ''; ?>><?php echo getTranslation('admin.orders.status.cancelled', $language, $pdo); ?></option>
                                         </select>
                                     </form>
                                 </td>
@@ -160,7 +149,7 @@ function getOrderStatusBadgeClass($status) {
                                 <td><?php echo date('Y-m-d H:i', strtotime($order['created_at'])); ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-info" onclick="viewOrderDetails(<?php echo $order['id']; ?>)">
-                                        Részletek
+                                        <?php echo getTranslation('admin.orders.button.details', $language, $pdo); ?>
                                     </button>
                                 </td>
                             </tr>
@@ -177,7 +166,7 @@ function getOrderStatusBadgeClass($status) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Rendelés részletei</h5>
+                <h5 class="modal-title"><?php echo getTranslation('admin.orders.modal.title', $language, $pdo); ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="orderDetailsContent">
