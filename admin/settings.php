@@ -210,15 +210,36 @@ if ($activeTab === 'dictionary') {
                                         <th><?= __t('admin.settings.dictionary.value', 'admin') ?></th>
                                         <th><?= __t('admin.settings.dictionary.context', 'admin') ?></th>
                                         <th><?= __t('admin.settings.dictionary.language', 'admin') ?></th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($translations as $translation): ?>
                                         <tr>
                                             <td><?= htmlspecialchars($translation['translation_key']) ?></td>
-                                            <td><?= htmlspecialchars($translation['translation_value']) ?></td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="text" 
+                                                           class="form-control translation-value" 
+                                                           value="<?= htmlspecialchars($translation['translation_value']) ?>"
+                                                           data-original="<?= htmlspecialchars($translation['translation_value']) ?>"
+                                                           data-key="<?= htmlspecialchars($translation['translation_key']) ?>"
+                                                           data-language="<?= htmlspecialchars($translation['language_code']) ?>"
+                                                           data-context="<?= htmlspecialchars($translation['context']) ?>">
+                                                </div>
+                                            </td>
                                             <td><?= htmlspecialchars($translation['context']) ?></td>
                                             <td><?= htmlspecialchars($translation['language_code']) ?></td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-success save-translation" title="Save">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger cancel-edit" title="Cancel">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -226,6 +247,57 @@ if ($activeTab === 'dictionary') {
                         </div>
                     </div>
                 </div>
+
+                <!-- Add JavaScript for translation editing -->
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Save translation
+                    document.querySelectorAll('.save-translation').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const row = this.closest('tr');
+                            const input = row.querySelector('.translation-value');
+                            const newValue = input.value;
+                            const key = input.dataset.key;
+                            const language = input.dataset.language;
+                            const context = input.dataset.context;
+
+                            // Send AJAX request
+                            fetch('/ecommerce/admin/ajax/update_translation.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `key=${encodeURIComponent(key)}&value=${encodeURIComponent(newValue)}&language=${encodeURIComponent(language)}&context=${encodeURIComponent(context)}`
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // Update the original value
+                                    input.dataset.original = newValue;
+                                    // Show success message
+                                    alert('Translation updated successfully');
+                                } else {
+                                    alert('Error: ' + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('Error updating translation');
+                            });
+                        });
+                    });
+
+                    // Cancel edit
+                    document.querySelectorAll('.cancel-edit').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const row = this.closest('tr');
+                            const input = row.querySelector('.translation-value');
+                            // Reset to original value
+                            input.value = input.dataset.original;
+                        });
+                    });
+                });
+                </script>
             <?php endif; ?>
         </div>
     </div>
