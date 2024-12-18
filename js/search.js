@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('search.php?q=' + encodeURIComponent(term))
             .then(response => response.json())
             .then(data => {
+                console.log('Search term:', term);
+                console.log('Search results:', data);
+
                 if (data.error) {
                     searchResults.innerHTML = '<div class="p-3 text-danger">Error: ' + data.message + '</div>';
                     searchResults.style.display = 'block';

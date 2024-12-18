@@ -19,15 +19,17 @@
         const searchResults = document.getElementById('searchResults');
         
         searchInput.addEventListener('input', function() {
+            console.log('Search input:', this.value);  // Keresési kifejezés kiírása
             if (this.value.length >= 3) {
                 fetch('search.php?q=' + this.value)
                     .then(response => response.json())
                     .then(data => {
+                        console.log('Search results:', data);  // Találatok kiírása
                         let html = '';
                         data.forEach(product => {
                             html += `
                                 <a href="${product.url}" class="d-block p-2 text-decoration-none text-dark hover-bg-light">
-                                    ${product.name} - $${product.price}
+                                    ${product.name} - ${product.price}
                                 </a>
                             `;
                         });

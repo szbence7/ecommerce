@@ -19,7 +19,7 @@ function getShopCurrency() {
         return $dbCurrency;
     }
     
-    return 'HUF'; // Default to HUF if not set
+    return 'EUR'; // Default to EUR if not set
 }
 
 function getExchangeRate($currency) {
