@@ -53,16 +53,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['complete_order'])) {
         $_SESSION['checkout']['payment_method'] = $_POST['payment_method'];
         
-        // Generate order number and store it in session
-        $_SESSION['order_number'] = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
+        // Generate order number
+        $orderNumber = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
         
-        // TODO: Save order details to database here
+        // Determine payment status based on payment method
+        $paymentStatus = 'pending_payment'; // default
+        switch ($_POST['payment_method']) {
+            case 'card':
+                $paymentStatus = 'paid';
+                break;
+            case 'transfer':
+                $paymentStatus = 'pending_payment';
+                break;
+            case 'cash_on_delivery':
+                $paymentStatus = 'cash_on_delivery';
+                break;
+        }
         
-        // Clear the cart
-        $_SESSION['cart'] = array();
-        
-        header('Location: checkout.php?success=true');
-        exit();
+        try {
+            // Start transaction
+            $pdo->beginTransaction();
+            
+            // Calculate total
+            $total = 0;
+            foreach ($_SESSION['cart'] as $product_id => $quantity) {
+                $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
+                $stmt->execute([$product_id]);
+                $product = $stmt->fetch();
+                $total += $product['price'] * $quantity;
+            }
+            
+            // Insert order
+            $stmt = $pdo->prepare("
+                INSERT INTO orders (
+                    order_number, user_id, status, total_amount, payment_method, 
+                    payment_status, shipping_method, email, firstname, lastname,
+                    street_address, city, country, postal_code
+                ) VALUES (
+                    ?, ?, 'processing', ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?
+                )
+            ");
+            
+            $userId = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : 0;
+            $stmt->execute([
+                $orderNumber,
+                $userId,
+                $total,
+                $_POST['payment_method'],
+                $paymentStatus,
+                $_SESSION['checkout']['shipping_method'],
+                $_SESSION['checkout']['email'],
+                $_SESSION['checkout']['firstname'],
+                $_SESSION['checkout']['lastname'],
+                $_SESSION['checkout']['street_address'],
+                $_SESSION['checkout']['city'],
+                $_SESSION['checkout']['country'],
+                $_SESSION['checkout']['postal_code']
+            ]);
+            
+            $orderId = $pdo->lastInsertId();
+            
+            // Insert order items
+            $stmt = $pdo->prepare("
+                INSERT INTO order_items (order_id, product_id, quantity, price)
+                VALUES (?, ?, ?, ?)
+            ");
+            
+            foreach ($_SESSION['cart'] as $product_id => $quantity) {
+                $priceStmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
+                $priceStmt->execute([$product_id]);
+                $product = $priceStmt->fetch();
+                
+                $stmt->execute([
+                    $orderId,
+                    $product_id,
+                    $quantity,
+                    $product['price']
+                ]);
+            }
+            
+            // Commit transaction
+            $pdo->commit();
+            
+            // Store order number in session for thank you page
+            $_SESSION['order_number'] = $orderNumber;
+            
+            // Clear the cart
+            $_SESSION['cart'] = array();
+            
+            header('Location: checkout.php?success=true');
+            exit();
+            
+        } catch (Exception $e) {
+            // Rollback transaction on error
+            $pdo->rollBack();
+            error_log("Order creation failed: " . $e->getMessage());
+            header('Location: checkout.php?error=1');
+            exit();
+        }
     }
 }
 

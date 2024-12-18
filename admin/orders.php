@@ -20,14 +20,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset(
     exit();
 }
 
-// Get initial orders
-$stmt = $pdo->prepare("SELECT o.*, u.name as customer_name, u.email as customer_email 
-                      FROM orders o 
-                      JOIN users u ON o.user_id = u.id 
-                      ORDER BY o.created_at DESC
-                      LIMIT 10");
+// Get all orders with payment and shipping details
+$stmt = $pdo->prepare("
+    SELECT o.*, 
+           CONCAT(o.firstname, ' ', o.lastname) as customer_name,
+           o.email as customer_email,
+           o.payment_method,
+           o.payment_status,
+           o.shipping_method,
+           o.order_number
+    FROM orders o 
+    ORDER BY o.created_at DESC
+    LIMIT 10
+");
 $stmt->execute();
 $orders = $stmt->fetchAll();
+
+// Helper function to get payment status badge class
+function getPaymentStatusBadgeClass($status) {
+    switch ($status) {
+        case 'paid':
+            return 'bg-success';
+        case 'pending_payment':
+            return 'bg-warning text-dark';
+        case 'cash_on_delivery':
+            return 'bg-info text-dark';
+        default:
+            return 'bg-secondary';
+    }
+}
+
+// Helper function to get order status badge class
+function getOrderStatusBadgeClass($status) {
+    switch ($status) {
+        case 'processing':
+            return 'bg-primary';
+        case 'shipped':
+            return 'bg-info';
+        case 'delivered':
+            return 'bg-success';
+        case 'cancelled':
+            return 'bg-danger';
+        default:
+            return 'bg-warning text-dark';
+    }
+}
 ?>
 
 <div class="container-fluid">
@@ -60,39 +97,59 @@ $orders = $stmt->fetchAll();
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th><?php echo __t('admin.orders.table.order_id', 'admin'); ?></th>
-                            <th><?php echo __t('admin.orders.table.customer', 'admin'); ?></th>
-                            <th><?php echo __t('admin.orders.table.total', 'admin'); ?></th>
-                            <th><?php echo __t('admin.orders.table.status', 'admin'); ?></th>
-                            <th><?php echo __t('admin.orders.table.date', 'admin'); ?></th>
-                            <th><?php echo __t('admin.orders.table.actions', 'admin'); ?></th>
+                            <th>Rendelési szám</th>
+                            <th>Vásárló</th>
+                            <th>Fizetési mód</th>
+                            <th>Fizetési státusz</th>
+                            <th>Rendelés státusza</th>
+                            <th>Összeg</th>
+                            <th>Dátum</th>
+                            <th>Műveletek</th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
                         <?php foreach ($orders as $order): ?>
                             <tr>
-                                <td>#<?php echo $order['id']; ?></td>
+                                <td><?php echo htmlspecialchars($order['order_number']); ?></td>
                                 <td>
                                     <?php echo htmlspecialchars($order['customer_name']); ?><br>
                                     <small class="text-muted"><?php echo htmlspecialchars($order['customer_email']); ?></small>
                                 </td>
-                                <td><?php echo formatPrice($order['total']); ?></td>
+                                <td><?php 
+                                    $payment_methods = [
+                                        'card' => 'Bankkártya',
+                                        'transfer' => 'Átutalás',
+                                        'cash_on_delivery' => 'Utánvét'
+                                    ];
+                                    echo $payment_methods[$order['payment_method']] ?? $order['payment_method'];
+                                ?></td>
+                                <td><span class="badge <?php echo getPaymentStatusBadgeClass($order['payment_status']); ?>">
+                                    <?php 
+                                        $payment_statuses = [
+                                            'paid' => 'Fizetve',
+                                            'pending_payment' => 'Fizetésre vár',
+                                            'cash_on_delivery' => 'Utánvét'
+                                        ];
+                                        echo $payment_statuses[$order['payment_status']] ?? $order['payment_status'];
+                                    ?>
+                                </span></td>
                                 <td>
                                     <form method="POST" class="d-inline">
                                         <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                         <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                            <option value="pending" <?php echo $order['status'] == 'pending' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.pending', 'admin'); ?></option>
-                                            <option value="processing" <?php echo $order['status'] == 'processing' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.processing', 'admin'); ?></option>
-                                            <option value="shipped" <?php echo $order['status'] == 'shipped' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.shipped', 'admin'); ?></option>
-                                            <option value="delivered" <?php echo $order['status'] == 'delivered' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.delivered', 'admin'); ?></option>
-                                            <option value="cancelled" <?php echo $order['status'] == 'cancelled' ? 'selected' : ''; ?>><?php echo __t('admin.orders.status.cancelled', 'admin'); ?></option>
+                                            <option value="pending" <?php echo $order['status'] == 'pending' ? 'selected' : ''; ?>>Függőben</option>
+                                            <option value="processing" <?php echo $order['status'] == 'processing' ? 'selected' : ''; ?>>Feldolgozás alatt</option>
+                                            <option value="shipped" <?php echo $order['status'] == 'shipped' ? 'selected' : ''; ?>>Kiszállítva</option>
+                                            <option value="delivered" <?php echo $order['status'] == 'delivered' ? 'selected' : ''; ?>>Kézbesítve</option>
+                                            <option value="cancelled" <?php echo $order['status'] == 'cancelled' ? 'selected' : ''; ?>>Törölve</option>
                                         </select>
                                     </form>
                                 </td>
+                                <td><?php echo formatPrice($order['total_amount']); ?></td>
                                 <td><?php echo date('Y-m-d H:i', strtotime($order['created_at'])); ?></td>
                                 <td>
-                                    <button class="btn btn-sm btn-info" onclick="viewOrderDetails(<?php echo $order['id']; ?>)">
-                                        <?php echo __t('admin.orders.view_details', 'admin'); ?>
+                                    <button type="button" class="btn btn-sm btn-info" onclick="viewOrderDetails(<?php echo $order['id']; ?>)">
+                                        Részletek
                                     </button>
                                 </td>
                             </tr>
@@ -109,46 +166,31 @@ $orders = $stmt->fetchAll();
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><?php echo __t('admin.orders.modal.title', 'admin'); ?></h5>
+                <h5 class="modal-title">Rendelés részletei</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="orderDetailsContent">
-                <?php echo __t('admin.orders.modal.loading', 'admin'); ?>
+                <!-- Content will be loaded dynamically -->
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function searchOrders() {
-    const searchTerm = document.getElementById('searchInput').value;
-    fetch(`get_orders.php?search=${encodeURIComponent(searchTerm)}`)
+function viewOrderDetails(orderId) {
+    // Load order details via AJAX
+    fetch(`get_order_details.php?id=${orderId}`)
         .then(response => response.text())
         .then(html => {
-            document.getElementById('ordersTableBody').innerHTML = html;
+            document.getElementById('orderDetailsContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
         });
 }
 
-function viewOrderDetails(orderId) {
-    const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-    modal.show();
-    
-    // Here you would fetch the order details from a new endpoint
-    // For now, we'll just show a placeholder
-    document.getElementById('orderDetailsContent').innerHTML = `
-        <div class="text-center">
-            <h4>Order #${orderId}</h4>
-            <p>Order details functionality coming soon...</p>
-        </div>
-    `;
+function searchOrders() {
+    const searchTerm = document.getElementById('searchInput').value;
+    // Implement search functionality
 }
-
-// Enable search on Enter key
-document.getElementById('searchInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        searchOrders();
-    }
-});
 </script>
 
 <?php include 'layout/footer.php'; ?>
