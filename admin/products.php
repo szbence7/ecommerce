@@ -136,7 +136,14 @@ $products = $stmt->fetchAll();
                                 </td>
                                 <td><?php echo htmlspecialchars($product['name']); ?></td>
                                 <td><?php echo htmlspecialchars($product['description']); ?></td>
-                                <td><?php echo formatPrice($product['price']); ?></td>
+                                <td>
+                                    <?php if ($product['is_on_sale'] == 1 && $product['discount_price'] !== null): ?>
+                                        <div class="text-decoration-line-through text-muted small"><?php echo formatPrice($product['price']); ?></div>
+                                        <div class="text-danger fw-bold"><?php echo formatPrice($product['discount_price']); ?></div>
+                                    <?php else: ?>
+                                        <?php echo formatPrice($product['price']); ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($product['category_name']); ?></td>
                                 <td><img src="<?php echo htmlspecialchars($product['image']); ?>" height="50"></td>
                                 <td>
