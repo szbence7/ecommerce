@@ -1,6 +1,7 @@
 <?php
 include 'includes/header.php';
 require_once 'includes/functions.php';
+require_once 'includes/components/sale_badge.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
@@ -19,6 +20,9 @@ $currentQuantity = isset($_SESSION['cart'][$product['id']]) ? $_SESSION['cart'][
     <div class="row g-5">
         <div class="col-lg-7">
             <div class="position-sticky" style="top: 2rem;">
+                <?php if ($product['is_on_sale']): ?>
+                    <?php renderSaleBadge(); ?>
+                <?php endif; ?>
                 <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
                      class="img-fluid rounded-3 w-100 object-fit-cover" style="max-height: 600px;" 
                      alt="<?= htmlspecialchars($product['name']) ?>">

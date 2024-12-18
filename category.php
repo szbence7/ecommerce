@@ -1,6 +1,7 @@
 <?php
 include 'includes/header.php';
 require_once 'includes/functions.php';
+require_once 'includes/components/sale_badge.php';
 
 // Kategória lekérése
 $stmt = $pdo->prepare('SELECT * FROM categories WHERE id = ?');
@@ -24,10 +25,15 @@ $products = $stmt->fetchAll();
     <?php foreach ($products as $product): ?>
         <div class="col-md-4 mb-4">
             <div class="card h-100">
-                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
-                     class="card-img-top" 
-                     alt="<?php echo htmlspecialchars($product['name']); ?>"
-                     style="height: 200px; object-fit: cover;">
+                <div class="product-image-container">
+                    <?php if ($product['is_on_sale']): ?>
+                        <?php renderSaleBadge(); ?>
+                    <?php endif; ?>
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
+                         class="card-img-top" 
+                         alt="<?php echo htmlspecialchars($product['name']); ?>"
+                         style="height: 200px; object-fit: cover;">
+                </div>
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
                     <p class="card-text flex-grow-1"><?php echo htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?></p>

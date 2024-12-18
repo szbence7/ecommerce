@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 include 'includes/header.php';
 require_once 'includes/functions.php';
 require_once 'includes/language.php';
+require_once 'includes/components/sale_badge.php';
 
 // Check if database connection exists
 if (!isset($pdo)) {
@@ -88,10 +89,15 @@ try {
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
                             <a href="product.php?id=<?= $product['id'] ?>">
-                                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
-                                     class="card-img-top" 
-                                     alt="<?= htmlspecialchars($product['name']) ?>" 
-                                     style="height: 200px; object-fit: cover;">
+                                <div class="product-image-container">
+                                    <?php if ($product['is_on_sale']): ?>
+                                        <?php renderSaleBadge(); ?>
+                                    <?php endif; ?>
+                                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
+                                         class="card-img-top" 
+                                         alt="<?= htmlspecialchars($product['name']) ?>" 
+                                         style="height: 200px; object-fit: cover;">
+                                </div>
                             </a>
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">
