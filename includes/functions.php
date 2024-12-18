@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/language.php';
+
 function getShopCurrency() {
     // First check session
     if (isset($_SESSION['currency'])) {

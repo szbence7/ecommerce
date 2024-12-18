@@ -1,6 +1,8 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once 'auth_check.php';
-session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once '../includes/components/alert.php';
