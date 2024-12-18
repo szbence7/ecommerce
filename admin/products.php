@@ -70,10 +70,16 @@ $products = $stmt->fetchAll();
         <?php include 'layout/sidebar.php'; ?>
         
         <div class="col-md-10" id="content">
-            <h2>Products</h2>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Products</h2>
+                <button class="btn btn-primary" onclick="toggleNewProductForm()">
+                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                    Add New Product
+                </button>
+            </div>
 
             <!-- Új termék form -->
-            <div class="card mb-4">
+            <div class="card mb-4" id="new_product_form" style="display: none;">
                 <div class="card-body">
                     <h5 class="card-title">Add New Product</h5>
                     <form method="POST">
@@ -308,6 +314,17 @@ $products = $stmt->fetchAll();
 
             // Add event listener for the "On Sale" checkbox
             document.getElementById('edit_is_on_sale').addEventListener('change', toggleDiscountPrice);
+
+            function toggleNewProductForm() {
+                const form = document.getElementById('new_product_form');
+                if (form.style.display === 'none') {
+                    form.style.display = 'block';
+                    // Scroll to the form
+                    form.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    form.style.display = 'none';
+                }
+            }
             </script>
         </div>
     </div>
