@@ -52,13 +52,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif (isset($_POST['complete_order'])) {
         $_SESSION['checkout']['payment_method'] = $_POST['payment_method'];
+        
+        // Generate order number and store it in session
+        $_SESSION['order_number'] = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
+        
+        // TODO: Save order details to database here
+        
+        // Clear the cart
+        $_SESSION['cart'] = array();
+        
         header('Location: checkout.php?success=true');
         exit();
     }
 }
 
 // Check cart after form processing but before output
-if (empty($_SESSION['cart'])) {
+// Only check if we're not on the success page
+if (!isset($_GET['success']) && empty($_SESSION['cart'])) {
     header('Location: index.php');
     exit();
 }
@@ -98,13 +108,19 @@ include 'includes/header.php';
 
 // Success page (after header)
 if (isset($_GET['success']) && $_GET['success'] === 'true') {
-    $orderNumber = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
+    $orderNumber = $_SESSION['order_number'] ?? 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
     ?>
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-8 text-center">
-                <h2 class="mb-4">Köszönjük a rendelést!</h2>
-                <p class="lead">Rendelési szám: <strong><?php echo $orderNumber; ?></strong></p>
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Köszönjük a rendelését!</h2>
+                        <p class="lead">A rendelési száma: <strong><?php echo htmlspecialchars($orderNumber); ?></strong></p>
+                        <p class="mt-4">A rendelés részleteiről e-mailben tájékoztatjuk.</p>
+                        <a href="index.php" class="btn btn-primary mt-3">Vissza a főoldalra</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
