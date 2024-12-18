@@ -97,30 +97,25 @@ updateUserSession();
             border-radius: 8px;
             z-index: 1000;
             right: 0;
-            margin-top: 0.5rem;
+            top: 100%;
+            padding-top: 10px;
         }
-        .user-dropdown:hover .user-dropdown-content {
-            display: block;
+        .user-dropdown-trigger {
+            cursor: pointer;
+            padding: 5px;
         }
-        .user-dropdown-content a {
-            color: #333;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            transition: background-color 0.2s;
-        }
-        .user-dropdown-content a:hover {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        .user-dropdown-content:before {
+        /* Create an invisible padding area */
+        .user-dropdown:before {
             content: '';
             position: absolute;
-            top: -8px;
-            right: 20px;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 8px solid #fff;
+            top: 100%;
+            left: 0;
+            right: 0;
+            height: 20px;
+        }
+        .user-dropdown:hover .user-dropdown-content,
+        .user-dropdown-content:hover {
+            display: block;
         }
     </style>
 </head>
@@ -138,7 +133,7 @@ updateUserSession();
             <div>
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <div class="user-dropdown">
-                        <span class="me-3" style="cursor: pointer;">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+                        <span class="user-dropdown-trigger me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
                         <div class="user-dropdown-content">
                             <a href="/ecommerce/profile.php"><?= __t('nav.profile') ?></a>
                         </div>
