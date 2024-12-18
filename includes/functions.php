@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/language.php';
+require_once __DIR__ . '/db.php';
 
 function getShopCurrency() {
     // First check session
@@ -22,97 +23,70 @@ function getShopCurrency() {
 }
 
 function getExchangeRate($currency) {
+    // First check session
+    if (isset($_SESSION['exchange_rates'][$currency])) {
+        return $_SESSION['exchange_rates'][$currency];
+    }
+    
+    // If not in session, get from database
     global $pdo;
-    
-    // Base currency always has rate of 1
-    if ($currency === 'EUR') return 1.00;
-    
-    // Try to get rate from database first
     $stmt = $pdo->prepare("SELECT rate FROM exchange_rates WHERE currency = ?");
     $stmt->execute([$currency]);
     $rate = $stmt->fetchColumn();
     
+    // Store in session and return
     if ($rate) {
-        return (float)$rate;
+        if (!isset($_SESSION['exchange_rates'])) {
+            $_SESSION['exchange_rates'] = [];
+        }
+        $_SESSION['exchange_rates'][$currency] = $rate;
+        return $rate;
     }
     
-    // If not in database, try to get from config
-    $currencyConfig = json_decode(file_get_contents(__DIR__ . '/../config/currencies.json'), true);
-    if ($currencyConfig && isset($currencyConfig['currencies'][$currency]['default_rate'])) {
-        return (float)$currencyConfig['currencies'][$currency]['default_rate'];
-    }
-    
-    // Default to 1 if no rate found
-    return 1.00;
+    return 1; // Default to 1 if not found
 }
 
 function formatPrice($price, $forceCurrency = null) {
-    global $currencyConfig;
+    $currency = $forceCurrency ?? getShopCurrency();
+    $rate = getExchangeRate($currency);
     
-    // Load currency configuration if not already loaded
-    if (!isset($currencyConfig)) {
-        $currencyConfig = json_decode(file_get_contents(__DIR__ . '/../config/currencies.json'), true);
-        if (!$currencyConfig) {
-            error_log('Error loading currency configuration in formatPrice');
-            return $price;
-        }
+    // Convert price to target currency
+    $convertedPrice = $price * $rate;
+    
+    // Format based on currency
+    switch ($currency) {
+        case 'HUF':
+            return number_format($convertedPrice, 0, ',', ' ') . ' Ft';
+        case 'EUR':
+            return number_format($convertedPrice, 2, ',', ' ') . ' €';
+        case 'USD':
+            return '$' . number_format($convertedPrice, 2, '.', ',');
+        default:
+            return number_format($convertedPrice, 2, '.', ',') . ' ' . $currency;
     }
-    
-    $displayCurrency = $forceCurrency ?? getShopCurrency();
-    
-    // If price is in EUR (base currency) and we want to display in another currency
-    if ($displayCurrency !== $currencyConfig['base_currency']) {
-        $rate = getExchangeRate($displayCurrency);
-        $price = $price * $rate;
-    }
-    
-    // Get currency info from config
-    if (isset($currencyConfig['currencies'][$displayCurrency])) {
-        $currencyInfo = $currencyConfig['currencies'][$displayCurrency];
-        $symbol = $currencyInfo['symbol'];
-        
-        // Format based on step value (e.g., no decimals for HUF)
-        $decimals = $currencyInfo['step'] === 100 ? 0 : 2;
-        
-        // Format with symbol in correct position
-        if ($displayCurrency === 'HUF') {
-            return number_format($price, $decimals, '.', ' ') . ' ' . $symbol;
-        } else {
-            return $symbol . number_format($price, $decimals, '.', ' ');
-        }
-    }
-    
-    // Fallback formatting if currency not in config
-    return number_format($price, 2, '.', ' ') . ' ' . $displayCurrency;
 }
 
-// Helper function to convert price back to EUR for storage
 function convertToEUR($price, $fromCurrency) {
     if ($fromCurrency === 'EUR') return $price;
-    
     $rate = getExchangeRate($fromCurrency);
-    return $rate > 0 ? ($price / $rate) : $price;
+    return $price / $rate;
 }
 
-// Function to update user session data from database
 function updateUserSession() {
-    global $pdo;
+    if (!isset($_SESSION['user_id'])) return;
     
-    if (isset($_SESSION['user_id'])) {
-        $stmt = $pdo->prepare("SELECT id, name, email, user_role FROM users WHERE id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
-        $user = $stmt->fetch();
-        
-        if ($user) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['user_role'];
-        } else {
-            // User no longer exists in database
-            session_destroy();
-            header('Location: /ecommerce/login.php');
-            exit();
-        }
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user = $stmt->fetch();
+    
+    if ($user) {
+        $_SESSION['user'] = [
+            'id' => $user['id'],
+            'email' => $user['email'],
+            'name' => $user['name'],
+            'role' => $user['role']
+        ];
     }
 }
 
@@ -120,27 +94,26 @@ function getSetting($pdo, $key, $default = null) {
     $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
     $stmt->execute([$key]);
     $value = $stmt->fetchColumn();
-    
     return $value !== false ? $value : $default;
 }
 
-// Function to check and update expired discounts
 function checkExpiredDiscounts($pdo) {
-    $currentDateTime = date('Y-m-d H:i:s');
     $stmt = $pdo->prepare("
         UPDATE products 
-        SET is_on_sale = 0, 
-            discount_price = NULL, 
+        SET discount_price = NULL, 
+            is_on_sale = 0,
             discount_end_time = NULL 
-        WHERE is_on_sale = 1 
-        AND discount_end_time IS NOT NULL 
-        AND discount_end_time <= ?
+        WHERE discount_end_time IS NOT NULL 
+        AND discount_end_time < NOW()
     ");
-    $stmt->execute([$currentDateTime]);
-    $updatedCount = $stmt->rowCount();
-    if ($updatedCount > 0) {
-        error_log("Updated $updatedCount products with expired discounts at $currentDateTime");
-    }
+    $stmt->execute();
+}
+
+function get_product($product_id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
+    $stmt->execute([$product_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // Check expired discounts on every page load
