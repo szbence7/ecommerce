@@ -89,7 +89,7 @@ updateUserSession();
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/index.php"><?= __t('nav.home') ?></a>
+            <a class="navbar-brand" href="/ecommerce/index.php"><?= __t('nav.home') ?></a>
             
             <!-- Search Bar -->
             <div class="search-container">

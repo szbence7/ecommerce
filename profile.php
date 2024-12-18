@@ -11,9 +11,21 @@ if (!isset($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_address'])) {
         // Update address logic
-        $address = $_POST['address'];
-        $stmt = $pdo->prepare("UPDATE users SET address = ? WHERE id = ?");
-        $stmt->execute([$address, $_SESSION['user_id']]);
+        $stmt = $pdo->prepare("UPDATE users SET 
+            street_address = ?,
+            city = ?,
+            country = ?,
+            postal_code = ?,
+            district = ?
+            WHERE id = ?");
+        $stmt->execute([
+            $_POST['street_address'],
+            $_POST['city'],
+            $_POST['country'],
+            $_POST['postal_code'],
+            $_POST['district'],
+            $_SESSION['user_id']
+        ]);
         $_SESSION['success_message'] = __t('address_updated_successfully');
     } elseif (isset($_POST['change_password'])) {
         // Change password logic
@@ -119,8 +131,36 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
                 <div class="card-body">
                     <form method="POST">
-                        <div class="mb-3">
-                            <textarea class="form-control" name="address" rows="3" placeholder="<?php echo __t('enter_your_address'); ?>"><?php echo htmlspecialchars($user['address'] ?? ''); ?></textarea>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label"><?php echo __t('street_address'); ?></label>
+                                <input type="text" class="form-control" name="street_address" value="<?php echo htmlspecialchars($user['street_address'] ?? ''); ?>" placeholder="<?php echo __t('enter_street_address'); ?>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><?php echo __t('city'); ?></label>
+                                <input type="text" class="form-control" name="city" value="<?php echo htmlspecialchars($user['city'] ?? ''); ?>" placeholder="<?php echo __t('enter_city'); ?>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><?php echo __t('district'); ?></label>
+                                <input type="text" class="form-control" name="district" value="<?php echo htmlspecialchars($user['district'] ?? ''); ?>" placeholder="<?php echo __t('enter_district'); ?>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><?php echo __t('postal_code'); ?></label>
+                                <input type="text" class="form-control" name="postal_code" value="<?php echo htmlspecialchars($user['postal_code'] ?? ''); ?>" placeholder="<?php echo __t('enter_postal_code'); ?>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><?php echo __t('country'); ?></label>
+                                <select class="form-select" name="country">
+                                    <option value=""><?php echo __t('select_country'); ?></option>
+                                    <option value="HU" <?php echo ($user['country'] ?? '') === 'HU' ? 'selected' : ''; ?>><?php echo __t('country_hungary'); ?></option>
+                                    <option value="AT" <?php echo ($user['country'] ?? '') === 'AT' ? 'selected' : ''; ?>><?php echo __t('country_austria'); ?></option>
+                                    <option value="DE" <?php echo ($user['country'] ?? '') === 'DE' ? 'selected' : ''; ?>><?php echo __t('country_germany'); ?></option>
+                                    <option value="SK" <?php echo ($user['country'] ?? '') === 'SK' ? 'selected' : ''; ?>><?php echo __t('country_slovakia'); ?></option>
+                                    <option value="RO" <?php echo ($user['country'] ?? '') === 'RO' ? 'selected' : ''; ?>><?php echo __t('country_romania'); ?></option>
+                                    <option value="HR" <?php echo ($user['country'] ?? '') === 'HR' ? 'selected' : ''; ?>><?php echo __t('country_croatia'); ?></option>
+                                    <option value="SI" <?php echo ($user['country'] ?? '') === 'SI' ? 'selected' : ''; ?>><?php echo __t('country_slovenia'); ?></option>
+                                </select>
+                            </div>
                         </div>
                         <button type="submit" name="update_address" class="btn btn-primary"><?php echo __t('update_address'); ?></button>
                     </form>
