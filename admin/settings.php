@@ -131,7 +131,7 @@ if ($activeTab === 'dictionary') {
                         <h5 class="card-title"><?= __t('admin.settings.language', 'admin') ?></h5>
                         <form method="POST" class="mt-4">
                             <div class="mb-3">
-                                <label for="default_language" class="form-label"><?= __t('admin.settings.default_language', 'admin') ?></label>
+                                <label for="default_language" class="form-label"><?= __t('admin.settings.language.default', 'admin') ?></label>
                                 <select name="default_language" id="default_language" class="form-select">
                                     <?php foreach ($languages as $lang): ?>
                                         <option value="<?= $lang['code'] ?>" <?= $lang['code'] === $currentLanguage ? 'selected' : '' ?>>
@@ -152,7 +152,7 @@ if ($activeTab === 'dictionary') {
                         <h5 class="card-title"><?= __t('admin.settings.currency', 'admin') ?></h5>
                         <form method="POST" class="mt-4">
                             <div class="mb-3">
-                                <label for="currency" class="form-label"><?= __t('admin.settings.shop_currency', 'admin') ?></label>
+                                <label for="currency" class="form-label"><?= __t('admin.settings.base_currency', 'admin') ?></label>
                                 <select name="currency" id="currency" class="form-select">
                                     <?php foreach ($currencyConfig['currencies'] as $code => $currency): ?>
                                         <option value="<?= $code ?>" <?= $code === $currentCurrency ? 'selected' : '' ?>>
@@ -167,10 +167,10 @@ if ($activeTab === 'dictionary') {
                         <h5 class="card-title mt-4"><?= __t('admin.settings.exchange_rates', 'admin') ?></h5>
                         <form method="POST" class="mt-4">
                             <?php foreach ($currencyConfig['currencies'] as $code => $currency): ?>
-                                <?php if ($code !== $currentCurrency): ?>
+                                <?php if ($code !== 'EUR'): ?>
                                     <div class="mb-3">
                                         <label for="rate_<?= $code ?>" class="form-label">
-                                            1 <?= $currentCurrency ?> = 
+                                            1 EUR = 
                                             <input type="number" 
                                                    step="0.0001" 
                                                    name="rates[<?= $code ?>]" 
