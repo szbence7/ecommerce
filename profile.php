@@ -219,7 +219,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     ?>
                                     <div class="card mb-3">
                                         <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted"><?php echo __t('orders.id'); ?>: #<?php echo $order['id']; ?></h6>
+                                            <h6 class="card-subtitle mb-2 text-muted"><?php echo __t('orders.order_number'); ?>: #<?php echo $order['order_number']; ?></h6>
                                             <p class="card-text">
                                                 <strong><?php echo __t('common.date'); ?>:</strong> <?php echo date('Y-m-d H:i', strtotime($order['created_at'])); ?><br>
                                                 <strong><?php echo __t('common.total'); ?>:</strong> <?php echo formatPrice($order['total_amount']); ?><br>
@@ -246,7 +246,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     ?>
                                     <div class="card mb-3">
                                         <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted"><?php echo __t('orders.id'); ?>: #<?php echo $order['id']; ?></h6>
+                                            <h6 class="card-subtitle mb-2 text-muted"><?php echo __t('orders.order_number'); ?>: #<?php echo $order['order_number']; ?></h6>
                                             <p class="card-text">
                                                 <strong><?php echo __t('common.date'); ?>:</strong> <?php echo date('Y-m-d H:i', strtotime($order['created_at'])); ?><br>
                                                 <strong><?php echo __t('common.total'); ?>:</strong> <?php echo formatPrice($order['total_amount']); ?><br>
