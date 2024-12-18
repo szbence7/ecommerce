@@ -217,7 +217,7 @@ if ($activeTab === 'dictionary') {
                                     <?php foreach ($translations as $translation): ?>
                                         <tr>
                                             <td><?= htmlspecialchars($translation['translation_key']) ?></td>
-                                            <td>
+                                            <td style="min-width: 300px;">
                                                 <div class="input-group">
                                                     <input type="text" 
                                                            class="form-control translation-value" 
@@ -226,20 +226,17 @@ if ($activeTab === 'dictionary') {
                                                            data-key="<?= htmlspecialchars($translation['translation_key']) ?>"
                                                            data-language="<?= htmlspecialchars($translation['language_code']) ?>"
                                                            data-context="<?= htmlspecialchars($translation['context']) ?>">
+                                                    <button type="button" class="btn btn-success save-translation" title="Save">
+                                                        <i data-lucide="check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger cancel-edit" title="Cancel">
+                                                        <i data-lucide="x"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                             <td><?= htmlspecialchars($translation['context']) ?></td>
                                             <td><?= htmlspecialchars($translation['language_code']) ?></td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <button type="button" class="btn btn-sm btn-success save-translation" title="Save">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-danger cancel-edit" title="Cancel">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
+                                            <td></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -251,6 +248,9 @@ if ($activeTab === 'dictionary') {
                 <!-- Add JavaScript for translation editing -->
                 <script>
                 document.addEventListener('DOMContentLoaded', function() {
+                    // Initialize Lucide icons
+                    lucide.createIcons();
+
                     // Save translation
                     document.querySelectorAll('.save-translation').forEach(button => {
                         button.addEventListener('click', function() {
