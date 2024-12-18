@@ -33,7 +33,7 @@ require_once __DIR__ . '/../../includes/language.php';
     </a>
 
     <!-- Logout at the bottom -->
-    <div style="position: absolute; bottom: 20px; width: 100%;">
+    <div style="position: fixed; bottom: 20px; left: 0; width: inherit; padding: 0 15px;">
         <a href="/ecommerce/logout.php" class="sidebar-link text-danger">
             <i data-lucide="log-out"></i>
             <?= __t('admin.logout', 'admin') ?>
