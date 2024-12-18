@@ -117,6 +117,26 @@ updateUserSession();
         .user-dropdown-content:hover {
             display: block;
         }
+        .user-dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+        .user-dropdown-content a:hover {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .user-dropdown-content:before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 20px;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #fff;
+        }
     </style>
 </head>
 <body>
