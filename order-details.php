@@ -48,19 +48,28 @@ $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .status-shipped { background: #d4edda; color: #155724; }
     .status-delivered { background: #d1e7dd; color: #0f5132; }
     
+    .timeline {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+    }
+    
     .timeline-step {
         display: flex;
+        flex-direction: column;
+        align-items: center;
         position: relative;
-        min-height: 5rem;
+        flex: 1;
     }
     
     .timeline-step:not(:last-child):before {
         content: '';
         position: absolute;
-        left: 1rem;
-        top: 2rem;
-        bottom: 0;
-        width: 2px;
+        left: 50%;
+        top: 1rem;
+        width: 100%;
+        height: 2px;
         background: #e9ecef;
     }
     
@@ -74,6 +83,7 @@ $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
         align-items: center;
         justify-content: center;
         z-index: 1;
+        margin-bottom: 0.5rem;
     }
     
     .timeline-step.active .step-icon {
@@ -83,7 +93,7 @@ $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     .timeline-step .step-content {
-        margin-left: 1rem;
+        text-align: center;
     }
     
     .order-card {
