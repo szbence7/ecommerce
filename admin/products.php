@@ -324,6 +324,12 @@ $products = $stmt->fetchAll();
                                                 
                                                 <input type="radio" class="btn-check" name="discount_percentage" id="discount_20" value="20" autocomplete="off">
                                                 <label class="btn btn-outline-primary" for="discount_20">20%</label>
+
+                                                <input type="radio" class="btn-check" name="discount_percentage" id="discount_25" value="25" autocomplete="off">
+                                                <label class="btn btn-outline-primary" for="discount_25">25%</label>
+
+                                                <input type="radio" class="btn-check" name="discount_percentage" id="discount_50" value="50" autocomplete="off">
+                                                <label class="btn btn-outline-primary" for="discount_50">50%</label>
                                             </div>
                                             <div class="input-group" style="width: auto;">
                                                 <input type="number" class="form-control" id="custom_discount_percentage" placeholder="Custom %" style="width: 100px;">
