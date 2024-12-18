@@ -61,6 +61,8 @@ function formatPrice($price, $forceCurrency = null) {
             return number_format($convertedPrice, 2, ',', ' ') . ' €';
         case 'USD':
             return '$' . number_format($convertedPrice, 2, '.', ',');
+        case 'GBP':
+            return '£' . number_format($convertedPrice, 2, '.', ',');
         default:
             return number_format($convertedPrice, 2, '.', ',') . ' ' . $currency;
     }

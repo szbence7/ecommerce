@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/db.php';
+require_once 'includes/functions.php';
 
 header('Content-Type: application/json');
 
@@ -17,8 +18,8 @@ try {
         $response[] = [
             'id' => $product['id'],
             'name' => $product['name'],
-            'price' => $product['price'],
-            'image' => 'images/placeholder.jpg'
+            'price' => formatPrice($product['price']),
+            'image' => !empty($product['image']) ? 'uploads/products/' . $product['image'] : 'images/placeholder.jpg'
         ];
     }
 } catch (PDOException $e) {

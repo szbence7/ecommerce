@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (!searchInput || !searchResults) return;
 
-    let searchTimeout = null;
-
     function performSearch(term) {
         if (term.length === 0) {
             searchResults.style.display = 'none';
@@ -33,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <img src="${product.image}" class="me-3" style="width: 50px; height: 50px; object-fit: cover;">
                                         <div>
                                             <div class="fw-bold">${product.name}</div>
-                                            <div class="text-muted">${product.price} Ft</div>
+                                            <div class="text-muted">${product.price}</div>
                                         </div>
                                     </a>
                                     <button onclick="event.preventDefault(); event.stopPropagation(); addToCart(${product.id})" class="btn btn-link">
@@ -93,21 +91,3 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-function addToCart(productId) {
-    const formData = new FormData();
-    formData.append('product_id', productId);
-    formData.append('quantity', 1);
-
-    fetch('update_cart.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('cart-count').textContent = data.cartCount;
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
