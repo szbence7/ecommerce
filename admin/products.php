@@ -76,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("
                 UPDATE products 
                 SET name = ?,
-                    short_description = ?,
                     description = ?,
                     price = ?,
                     category_id = ?,
@@ -89,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $stmt->execute([
                 $name,
-                $short_description,
                 $description,
                 $price,
                 $category_id,
@@ -105,9 +103,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 UPDATE product_translations 
                 SET name = ?,
                     short_description = ?
-                WHERE product_id = ?
+                WHERE product_id = ? AND language_code = ?
             ");
-            $stmt->execute([$name, $short_description, $id]);
+
+            // Update Hungarian translation
+            $stmt->execute([$name, $short_description, $id, 'hu']);
+            // Update English translation
+            $stmt->execute([$name, $short_description, $id, 'en']);
             
             set_alert("Product updated successfully!", "success");
             header('Location: products.php');
