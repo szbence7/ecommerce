@@ -82,6 +82,13 @@ $activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'general';
 
 // Get available languages
 $languages = getAvailableLanguages();
+
+// Get translations for dictionary tab
+if ($activeTab === 'dictionary') {
+    $stmt = $pdo->prepare("SELECT * FROM translations ORDER BY context, translation_key, language_code");
+    $stmt->execute();
+    $translations = $stmt->fetchAll();
+}
 ?>
 
 <div class="container-fluid">
@@ -110,23 +117,25 @@ $languages = getAvailableLanguages();
                         <?= __t('admin.settings.style', 'admin') ?>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link <?= $activeTab === 'dictionary' ? 'active' : '' ?>" href="?tab=dictionary">
+                        <?= __t('admin.settings.dictionary', 'admin') ?>
+                    </a>
+                </li>
             </ul>
 
-            <!-- Tab Content -->
             <?php if ($activeTab === 'general'): ?>
                 <!-- General Settings Tab -->
                 <div class="card mt-4">
                     <div class="card-body">
-                        <h5 class="card-title"><?= __t('admin.settings.general', 'admin') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.language', 'admin') ?></p>
-                        <form method="POST" action="">
+                        <h5 class="card-title"><?= __t('admin.settings.language', 'admin') ?></h5>
+                        <form method="POST" class="mt-4">
                             <div class="mb-3">
-                                <label for="default_language" class="form-label"><?= __t('admin.settings.language.default', 'admin') ?></label>
-                                <select class="form-select" id="default_language" name="default_language">
+                                <label for="default_language" class="form-label"><?= __t('admin.settings.default_language', 'admin') ?></label>
+                                <select name="default_language" id="default_language" class="form-select">
                                     <?php foreach ($languages as $lang): ?>
-                                        <option value="<?= htmlspecialchars($lang['code']) ?>" 
-                                                <?= $lang['is_default'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($lang['name']) ?>
+                                        <option value="<?= $lang['code'] ?>" <?= $lang['code'] === $currentLanguage ? 'selected' : '' ?>>
+                                            <?= $lang['name'] ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -141,69 +150,41 @@ $languages = getAvailableLanguages();
                 <div class="card mt-4">
                     <div class="card-body">
                         <h5 class="card-title"><?= __t('admin.settings.currency', 'admin') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.currency.select', 'admin') ?></p>
-                        
-                        <form method="POST">
+                        <form method="POST" class="mt-4">
                             <div class="mb-3">
-                                <label for="currency" class="form-label"><?= __t('admin.settings.currency.display', 'admin') ?></label>
+                                <label for="currency" class="form-label"><?= __t('admin.settings.shop_currency', 'admin') ?></label>
                                 <select name="currency" id="currency" class="form-select">
                                     <?php foreach ($currencyConfig['currencies'] as $code => $currency): ?>
-                                        <option value="<?= $code ?>" <?= $currentCurrency === $code ? 'selected' : '' ?>>
-                                            <?= $currency['name'] ?> (<?= $currency['symbol'] ?>)
+                                        <option value="<?= $code ?>" <?= $code === $currentCurrency ? 'selected' : '' ?>>
+                                            <?= $currency['name'] ?> (<?= $code ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save', 'admin') ?></button>
                         </form>
-                    </div>
-                </div>
 
-                <!-- Exchange Rates -->
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title"><?= __t('admin.settings.exchange_rates', 'admin') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.exchange_rates.relative', 'admin') ?></p>
-                        
-                        <form method="POST">
+                        <h5 class="card-title mt-4"><?= __t('admin.settings.exchange_rates', 'admin') ?></h5>
+                        <form method="POST" class="mt-4">
                             <?php foreach ($currencyConfig['currencies'] as $code => $currency): ?>
-                                <?php if ($code !== $currencyConfig['base_currency']): ?>
+                                <?php if ($code !== $currentCurrency): ?>
                                     <div class="mb-3">
-                                        <label class="form-label"><?= $currency['name'] ?> (<?= $currency['symbol'] ?>)</label>
-                                        <input type="number" name="rates[<?= $code ?>]" class="form-control" step="0.001" 
-                                               value="<?= number_format(isset($rates[$code]) ? $rates[$code] : $currency['default_rate'], 3) ?>" required>
-                                        <small class="text-muted"><?= __t('admin.settings.exchange_rates.current', 'admin') ?>: 1 <?= $currencyConfig['base_currency'] ?> = <?= number_format(isset($rates[$code]) ? $rates[$code] : $currency['default_rate'], 3) ?> <?= $code ?></small>
+                                        <label for="rate_<?= $code ?>" class="form-label">
+                                            1 <?= $currentCurrency ?> = 
+                                            <input type="number" 
+                                                   step="0.0001" 
+                                                   name="rates[<?= $code ?>]" 
+                                                   id="rate_<?= $code ?>" 
+                                                   value="<?= isset($rates[$code]) ? $rates[$code] : '1' ?>" 
+                                                   class="form-control d-inline-block" 
+                                                   style="width: 120px;">
+                                            <?= $code ?>
+                                        </label>
                                     </div>
                                 <?php endif; ?>
                             <?php endforeach; ?>
-                            
                             <button type="submit" class="btn btn-primary"><?= __t('admin.settings.save', 'admin') ?></button>
                         </form>
-
-                        <!-- Price Preview -->
-                        <div class="mt-4">
-                            <h6><?= __t('admin.settings.price_preview', 'admin') ?></h6>
-                            <p class="text-muted"><?= __t('admin.settings.price_preview.description', 'admin') ?></p>
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th><?= $currencyConfig['base_currency'] ?> (<?= __t('admin.settings.base_currency', 'admin') ?>)</th>
-                                        <th><?= __t('admin.settings.selected_currency', 'admin') ?></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php 
-                                    $samplePrices = [10, 99.99, 1000];
-                                    foreach ($samplePrices as $price): 
-                                    ?>
-                                    <tr>
-                                        <td><?php echo formatPrice($price, $currencyConfig['base_currency']); ?></td>
-                                        <td><?php echo formatPrice($price); ?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
 
@@ -212,12 +193,40 @@ $languages = getAvailableLanguages();
                 <div class="card mt-4">
                     <div class="card-body">
                         <h5 class="card-title"><?= __t('admin.settings.style', 'admin') ?></h5>
-                        <p class="text-muted"><?= __t('admin.settings.style.description', 'admin') ?></p>
-                        <!-- Style settings will be added here -->
+                        <!-- Add style settings here -->
+                    </div>
+                </div>
+
+            <?php elseif ($activeTab === 'dictionary'): ?>
+                <!-- Dictionary Tab -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= __t('admin.settings.dictionary.title', 'admin') ?></h5>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th><?= __t('admin.settings.dictionary.key', 'admin') ?></th>
+                                        <th><?= __t('admin.settings.dictionary.value', 'admin') ?></th>
+                                        <th><?= __t('admin.settings.dictionary.context', 'admin') ?></th>
+                                        <th><?= __t('admin.settings.dictionary.language', 'admin') ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($translations as $translation): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($translation['translation_key']) ?></td>
+                                            <td><?= htmlspecialchars($translation['translation_value']) ?></td>
+                                            <td><?= htmlspecialchars($translation['context']) ?></td>
+                                            <td><?= htmlspecialchars($translation['language_code']) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             <?php endif; ?>
-
         </div>
     </div>
 </div>
