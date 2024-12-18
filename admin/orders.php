@@ -99,6 +99,7 @@ function getOrderStatusBadgeClass($status) {
                         <tr>
                             <th>Rendelési szám</th>
                             <th>Vásárló</th>
+                            <th>Szállítási mód</th>
                             <th>Fizetési mód</th>
                             <th>Fizetési státusz</th>
                             <th>Rendelés státusza</th>
@@ -115,6 +116,16 @@ function getOrderStatusBadgeClass($status) {
                                     <?php echo htmlspecialchars($order['customer_name']); ?><br>
                                     <small class="text-muted"><?php echo htmlspecialchars($order['customer_email']); ?></small>
                                 </td>
+                                <td><?php 
+                                    $shipping_methods = [
+                                        'personal' => 'Személyes átvétel',
+                                        'gls' => 'GLS futár',
+                                        'dpd' => 'DPD futár',
+                                        'mpl' => 'MPL futár',
+                                        'automat' => 'Csomagautomata'
+                                    ];
+                                    echo $shipping_methods[$order['shipping_method']] ?? $order['shipping_method'];
+                                ?></td>
                                 <td><?php 
                                     $payment_methods = [
                                         'card' => 'Bankkártya',
