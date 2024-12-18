@@ -327,20 +327,27 @@ $final_total = $total + $shipping_cost;
                         <h3>3. Fizetési mód</h3>
                         <form method="POST">
                             <div class="mb-3">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="cod" value="cod" <?php echo $_SESSION['checkout']['payment_method'] === 'cod' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="cod">Utánvétes fizetés</label>
+                                <label class="form-label">Válassza ki a fizetési módot:</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="card" value="card" <?php echo ($_SESSION['checkout']['payment_method'] == 'card') ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="card">
+                                        Bankkártya
+                                    </label>
                                 </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="transfer" value="transfer" <?php echo $_SESSION['checkout']['payment_method'] === 'transfer' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="transfer">Átutalás</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="transfer" value="transfer" <?php echo ($_SESSION['checkout']['payment_method'] == 'transfer') ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="transfer">
+                                        Banki átutalás
+                                    </label>
                                 </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="card" value="card" <?php echo $_SESSION['checkout']['payment_method'] === 'card' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="card">Kártyás fizetés</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="cash_on_delivery" value="cash_on_delivery" <?php echo ($_SESSION['checkout']['payment_method'] == 'cash_on_delivery') ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="cash_on_delivery">
+                                        Utánvét
+                                    </label>
                                 </div>
                             </div>
-                            <button type="submit" name="complete_order" class="btn btn-success">Fizetés most</button>
+                            <button type="submit" name="complete_order" class="btn btn-primary">Rendelés véglegesítése</button>
                         </form>
                     <?php endif; ?>
                 </div>
