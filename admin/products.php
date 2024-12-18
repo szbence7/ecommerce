@@ -26,12 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add'])) {
         $name = $_POST['name'];
         $short_description = $_POST['short_description'];
+        $description = $_POST['description'];
         $price = $_POST['price'];
         $category_id = $_POST['category_id'];
         $image = $_POST['image'];
 
-        $stmt = $pdo->prepare("INSERT INTO products (name, short_description, price, category_id, image) VALUES (?, ?, ?, ?, ?)");
-        if ($stmt->execute([$name, $short_description, $price, $category_id, $image])) {
+        $stmt = $pdo->prepare("INSERT INTO products (name, short_description, description, price, category_id, image) VALUES (?, ?, ?, ?, ?, ?)");
+        if ($stmt->execute([$name, $short_description, $description, $price, $category_id, $image])) {
             $product_id = $pdo->lastInsertId();
             
             // Insert translations
@@ -52,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id'];
             $name = $_POST['name'];
             $short_description = $_POST['short_description'];
+            $description = $_POST['description'];
             $price = $_POST['price'];
             $category_id = $_POST['category_id'];
             $image = $_POST['image'];
@@ -73,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 UPDATE products 
                 SET name = ?,
                     short_description = ?,
+                    description = ?,
                     price = ?,
                     category_id = ?,
                     image = ?,
@@ -85,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([
                 $name,
                 $short_description,
+                $description,
                 $price,
                 $category_id,
                 $image,
@@ -125,11 +129,12 @@ $stmt = $pdo->query("SELECT * FROM categories");
 $categories = $stmt->fetchAll();
 
 // Termékek lekérése
+$currentLang = getCurrentLanguage();
 $stmt = $pdo->query("SELECT p.*, c.name as category_name, pt.short_description 
                      FROM products p 
                      LEFT JOIN categories c ON p.category_id = c.id
                      LEFT JOIN product_translations pt ON p.id = pt.product_id 
-                     AND pt.language_code = 'hu'");
+                     AND pt.language_code = '$currentLang'");
 $products = $stmt->fetchAll();
 ?>
 
@@ -161,6 +166,10 @@ $products = $stmt->fetchAll();
                             <label class="form-label">Short Description</label>
                             <input type="text" name="short_description" class="form-control" maxlength="255" required>
                             <small class="text-muted">A brief description of the product (max 255 characters)</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" required></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Price (EUR)</label>
@@ -282,6 +291,10 @@ $products = $stmt->fetchAll();
                                     <small class="text-muted">A brief description of the product (max 255 characters)</small>
                                 </div>
                                 <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea name="description" id="edit_description" class="form-control" required></textarea>
+                                </div>
+                                <div class="mb-3">
                                     <label class="form-label">Price (EUR)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">€</span>
@@ -350,6 +363,7 @@ $products = $stmt->fetchAll();
                 document.getElementById('edit_id').value = product.id;
                 document.getElementById('edit_name').value = product.name;
                 document.getElementById('edit_short_description').value = product.short_description || '';
+                document.getElementById('edit_description').value = product.description;
                 document.getElementById('edit_price').value = product.price;
                 document.getElementById('edit_category_id').value = product.category_id;
                 document.getElementById('edit_image').value = product.image;
