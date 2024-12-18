@@ -191,18 +191,24 @@ $products = $stmt->fetchAll();
                                 </div>
                                 <div class="mb-3" id="discount_percentage_container" style="display: none;">
                                     <label class="form-label">Discount Percentage</label>
-                                    <div class="btn-group w-100" role="group">
-                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_5" value="5" autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="discount_5">5%</label>
-                                        
-                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_10" value="10" autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="discount_10">10%</label>
-                                        
-                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_25" value="25" autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="discount_25">25%</label>
-                                        
-                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_50" value="50" autocomplete="off">
-                                        <label class="btn btn-outline-primary" for="discount_50">50%</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="btn-group" role="group">
+                                            <input type="radio" class="btn-check" name="discount_percentage" id="discount_5" value="5" autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="discount_5">5%</label>
+                                            
+                                            <input type="radio" class="btn-check" name="discount_percentage" id="discount_10" value="10" autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="discount_10">10%</label>
+                                            
+                                            <input type="radio" class="btn-check" name="discount_percentage" id="discount_25" value="25" autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="discount_25">25%</label>
+                                            
+                                            <input type="radio" class="btn-check" name="discount_percentage" id="discount_50" value="50" autocomplete="off">
+                                            <label class="btn btn-outline-primary" for="discount_50">50%</label>
+                                        </div>
+                                        <div class="input-group" style="width: 120px;">
+                                            <input type="number" id="custom_discount_percentage" class="form-control" step="0.01" min="0" max="100" placeholder="Custom">
+                                            <span class="input-group-text">%</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="mb-3" id="discount_price_container" style="display: none;">
@@ -240,7 +246,8 @@ $products = $stmt->fetchAll();
                 document.getElementById('edit_category_id').value = product.category_id;
                 document.getElementById('edit_image').value = product.image;
                 document.getElementById('edit_is_on_sale').checked = product.is_on_sale == 1;
-                document.getElementById('edit_discount_price').value = product.discount_price || '';
+                document.getElementById('edit_discount_price').value = product.discount_price;
+                document.getElementById('custom_discount_percentage').value = '';
                 toggleDiscountPrice();
                 
                 var modal = new bootstrap.Modal(document.getElementById('editModal'));
@@ -252,6 +259,7 @@ $products = $stmt->fetchAll();
                 const discountContainer = document.getElementById('discount_price_container');
                 const percentageContainer = document.getElementById('discount_percentage_container');
                 const discountInput = document.getElementById('edit_discount_price');
+                const customPercentageInput = document.getElementById('custom_discount_percentage');
                 
                 if (isOnSale) {
                     discountContainer.style.display = 'block';
@@ -260,6 +268,7 @@ $products = $stmt->fetchAll();
                     discountContainer.style.display = 'none';
                     percentageContainer.style.display = 'none';
                     discountInput.value = '';
+                    customPercentageInput.value = '';
                     // Uncheck all radio buttons
                     document.querySelectorAll('input[name="discount_percentage"]').forEach(radio => {
                         radio.checked = false;
@@ -272,11 +281,29 @@ $products = $stmt->fetchAll();
                 radio.addEventListener('change', function() {
                     const originalPrice = parseFloat(document.getElementById('edit_price').value);
                     const discountPercentage = parseFloat(this.value);
+                    document.getElementById('custom_discount_percentage').value = '';
                     if (!isNaN(originalPrice) && !isNaN(discountPercentage)) {
                         const discountedPrice = originalPrice * (1 - discountPercentage / 100);
                         document.getElementById('edit_discount_price').value = discountedPrice.toFixed(2);
                     }
                 });
+            });
+
+            // Add event listener for custom percentage input
+            document.getElementById('custom_discount_percentage').addEventListener('input', function() {
+                // Uncheck radio buttons when custom percentage is being used
+                document.querySelectorAll('input[name="discount_percentage"]').forEach(radio => {
+                    radio.checked = false;
+                });
+            });
+
+            document.getElementById('custom_discount_percentage').addEventListener('blur', function() {
+                const originalPrice = parseFloat(document.getElementById('edit_price').value);
+                const customPercentage = parseFloat(this.value);
+                if (!isNaN(originalPrice) && !isNaN(customPercentage)) {
+                    const discountedPrice = originalPrice * (1 - customPercentage / 100);
+                    document.getElementById('edit_discount_price').value = discountedPrice.toFixed(2);
+                }
             });
 
             // Add event listener for the "On Sale" checkbox
