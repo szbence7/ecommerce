@@ -183,7 +183,7 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `price`, `discount_price`, `is_on_sale`, `category_id`, `image`, `created_at`) VALUES
-(1, 'iPhone 14 Pro', 'Latest Apple smartphone with advanced features', 999.99, NULL, 0, 1, 'iphone14pro.jpg', '2024-12-16 15:23:58'),
+(1, 'iPhone 14 Pro', 'Latest Apple smartphone with advanced features', 999.99, 899.99, 1, 1, 'iphone14pro.jpg', '2024-12-16 15:23:58'),
 (2, 'Samsung 4K TV', '55-inch Smart LED TV with HDR', 699.99, NULL, 0, 1, 'samsung-tv.jpg', '2024-12-16 15:23:58'),
 (3, 'MacBook Air M2', '13-inch laptop with Apple M2 chip', 1299.99, NULL, 0, 1, 'macbook-air.jpg', '2024-12-16 15:23:58'),
 (4, 'Classic Blue Jeans', 'Comfortable cotton denim jeans', 49.99, NULL, 0, 2, 'blue-jeans.jpg', '2024-12-16 15:23:58'),

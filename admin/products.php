@@ -116,6 +116,7 @@ $products = $stmt->fetchAll();
                     <thead>
                         <tr>
                             <th>ID</th>
+                            <th>Akció</th>
                             <th>Name</th>
                             <th>Description</th>
                             <th>Price</th>
@@ -128,6 +129,15 @@ $products = $stmt->fetchAll();
                         <?php foreach ($products as $product): ?>
                             <tr>
                                 <td><?php echo $product['id']; ?></td>
+                                <td>
+                                    <?php if ((int)$product['is_on_sale'] === 1): ?>
+                                        <i data-lucide="check" class="text-success" style="width: 18px; height: 18px;"></i>
+                                    <?php endif; ?>
+                                    <?php 
+                                        // Debug output
+                                        echo "<!-- Debug: is_on_sale=" . var_export($product['is_on_sale'], true) . " -->";
+                                    ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($product['name']); ?></td>
                                 <td><?php echo htmlspecialchars($product['description']); ?></td>
                                 <td><?php echo formatPrice($product['price']); ?></td>
