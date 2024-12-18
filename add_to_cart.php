@@ -50,7 +50,7 @@ try {
         
         foreach ($products as $product) {
             $quantity = $_SESSION['cart'][$product['id']];
-            $price = $product['price'];
+            $price = ($product['is_on_sale'] && $product['discount_price'] !== null) ? $product['discount_price'] : $product['price'];
             $cartTotal += $price * $quantity;
         }
     }

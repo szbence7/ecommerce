@@ -27,7 +27,14 @@ $currentQuantity = isset($_SESSION['cart'][$product['id']]) ? $_SESSION['cart'][
         <div class="col-lg-5">
             <div class="product-details">
                 <h1 class="display-5 fw-bold mb-4"><?= htmlspecialchars($product['name']) ?></h1>
-                <p class="h2 text-primary mb-4"><?= formatPrice($product['price']) ?></p>
+                <?php if ($product['is_on_sale'] && $product['discount_price']): ?>
+                    <p class="mb-4">
+                        <span class="text-muted text-decoration-line-through fs-4"><?= formatPrice($product['price']) ?></span>
+                        <span class="h2 text-danger ms-2"><?= formatPrice($product['discount_price']) ?></span>
+                    </p>
+                <?php else: ?>
+                    <p class="h2 text-primary mb-4"><?= formatPrice($product['price']) ?></p>
+                <?php endif; ?>
                 <div class="mb-4">
                     <p class="text-muted"><?= nl2br(htmlspecialchars($product['description'])) ?></p>
                 </div>

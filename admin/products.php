@@ -44,9 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = $_POST['price'];
         $category_id = $_POST['category_id'];
         $image = $_POST['image'];
+        $is_on_sale = isset($_POST['is_on_sale']) ? 1 : 0;
+        $discount_price = $is_on_sale ? $_POST['discount_price'] : null;
 
-        $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, image = ? WHERE id = ?");
-        $stmt->execute([$name, $description, $price, $category_id, $image, $id]);
+        $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, category_id = ?, image = ?, is_on_sale = ?, discount_price = ? WHERE id = ?");
+        $stmt->execute([$name, $description, $price, $category_id, $image, $is_on_sale, $discount_price, $id]);
         header('Location: products.php');
         exit();
     }
@@ -169,6 +171,19 @@ $products = $stmt->fetchAll();
                                     </div>
                                 </div>
                                 <div class="mb-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="is_on_sale" id="edit_is_on_sale" class="form-check-input">
+                                        <label class="form-check-label" for="edit_is_on_sale">On Sale</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3" id="discount_price_container" style="display: none;">
+                                    <label class="form-label">Sale Price (EUR)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">€</span>
+                                        <input type="number" name="discount_price" id="edit_discount_price" class="form-control" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
                                     <label class="form-label">Category</label>
                                     <select name="category_id" id="edit_category_id" class="form-select" required>
                                         <?php foreach ($categories as $category): ?>
@@ -195,9 +210,27 @@ $products = $stmt->fetchAll();
                 document.getElementById('edit_price').value = product.price;
                 document.getElementById('edit_category_id').value = product.category_id;
                 document.getElementById('edit_image').value = product.image;
+                document.getElementById('edit_is_on_sale').checked = product.is_on_sale == 1;
+                document.getElementById('edit_discount_price').value = product.discount_price || '';
+                toggleDiscountPrice();
                 
                 new bootstrap.Modal(document.getElementById('editModal')).show();
             }
+
+            function toggleDiscountPrice() {
+                const isOnSale = document.getElementById('edit_is_on_sale').checked;
+                const discountContainer = document.getElementById('discount_price_container');
+                const discountInput = document.getElementById('edit_discount_price');
+                
+                discountContainer.style.display = isOnSale ? 'block' : 'none';
+                if (isOnSale) {
+                    discountInput.setAttribute('required', 'required');
+                } else {
+                    discountInput.removeAttribute('required');
+                }
+            }
+
+            document.getElementById('edit_is_on_sale').addEventListener('change', toggleDiscountPrice);
             </script>
         </div>
     </div>

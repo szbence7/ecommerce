@@ -48,7 +48,7 @@ if (isset($_POST['product_id']) && isset($_POST['action'])) {
         foreach ($products as $product) {
             $quantity = $_SESSION['cart'][$product['id']];
             // Az ár már forintban van tárolva
-            $price = $product['price'];
+            $price = ($product['is_on_sale'] && $product['discount_price'] !== null) ? $product['discount_price'] : $product['price'];
             $cartTotal += $price * $quantity;
             
             // Calculate subtotal for the updated product

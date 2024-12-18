@@ -103,19 +103,26 @@ try {
                                         ?>
                                     </a>
                                 </h5>
-                                <p class="card-text">
+                                <p class="card-text flex-grow-1">
                                     <?php 
-                                    // Get product description translation if available
+                                    // Get product translation if available
                                     $translation = getEntityTranslation('product', $product['id'], 'description', $product['description']);
-                                    echo htmlspecialchars($translation);
+                                    echo htmlspecialchars(substr($translation, 0, 100)) . '...'; 
                                     ?>
                                 </p>
-                                <p class="card-text text-muted mb-2">
-                                    <?= __t('product.price', 'shop', ['price' => formatPrice($product['price'])]) ?>
-                                </p>
-                                <button onclick="addToCart(<?= $product['id'] ?>)" class="btn btn-primary mt-auto">
-                                    <?= __t('product.addtocart', 'shop') ?>
-                                </button>
+                                <div class="mt-auto">
+                                    <?php if ($product['is_on_sale'] && $product['discount_price']): ?>
+                                        <p class="card-text mb-2">
+                                            <span class="text-muted text-decoration-line-through"><?= formatPrice($product['price']) ?></span>
+                                            <span class="h5 text-danger ms-2"><?= formatPrice($product['discount_price']) ?></span>
+                                        </p>
+                                    <?php else: ?>
+                                        <p class="card-text mb-2"><?= formatPrice($product['price']) ?></p>
+                                    <?php endif; ?>
+                                    <button onclick="addToCart(<?= $product['id'] ?>)" class="btn btn-primary">
+                                        <?= __t('cart.add', 'shop') ?>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
