@@ -116,6 +116,16 @@ $products = $stmt->fetchAll();
                 </div>
             </div>
 
+            <!-- Keresőmező -->
+<div class="mb-4">
+    <div class="input-group">
+        <span class="input-group-text">
+            <i data-lucide="search"></i>
+        </span>
+        <input type="text" id="product_search" class="form-control" placeholder="Search products... (min. 3 characters)">
+    </div>
+</div>
+
             <!-- Termékek listája -->
             <div class="table-responsive">
                 <table class="table">
@@ -133,7 +143,7 @@ $products = $stmt->fetchAll();
                     </thead>
                     <tbody>
                         <?php foreach ($products as $product): ?>
-                            <tr>
+                            <tr data-product-id="<?php echo $product['id']; ?>">
                                 <td><?php echo $product['id']; ?></td>
                                 <td>
                                     <?php if ((int)$product['is_on_sale'] === 1): ?>
@@ -325,6 +335,64 @@ $products = $stmt->fetchAll();
                     form.style.display = 'none';
                 }
             }
+
+            // Keresés funkcionalitás
+let searchTimeout;
+const searchInput = document.getElementById('product_search');
+                
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+                        
+        if (this.value.length >= 3) {
+            searchTimeout = setTimeout(() => {
+                searchProducts(this.value);
+            }, 300);
+        } else if (this.value.length === 0) {
+            // Ha üres a mező, minden terméket megjelenítünk
+            document.querySelectorAll('table tbody tr').forEach(tr => {
+                tr.style.display = '';
+            });
+        }
+    });
+}
+
+function searchProducts(query) {
+    fetch(`search_products.php?search=${encodeURIComponent(query)}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(products => {
+            const rows = document.querySelectorAll('table tbody tr');
+                            
+            // Minden sort elrejtünk először
+            rows.forEach(row => {
+                row.style.display = 'none';
+            });
+                            
+            // Csak a találatokat jelenítjük meg
+            if (Array.isArray(products)) {
+                products.forEach(product => {
+                    if (product && product.id) {
+                        const productRow = document.querySelector(`tr[data-product-id="${product.id}"]`);
+                        if (productRow) {
+                            productRow.style.display = '';
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Hiba esetén minden sort megjelenítünk
+            document.querySelectorAll('table tbody tr').forEach(tr => {
+                tr.style.display = '';
+            });
+        });
+}
             </script>
         </div>
     </div>
