@@ -65,9 +65,18 @@ $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Get user orders
-$stmt = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
+$stmt = $pdo->prepare("
+    SELECT o.*, 
+           COALESCE(SUM(oi.quantity * oi.price), 0) as total_amount
+    FROM orders o
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    WHERE o.user_id = ?
+    GROUP BY o.id
+    ORDER BY o.created_at DESC
+");
 $stmt->execute([$_SESSION['user_id']]);
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 
 <div class="container py-5">
@@ -188,7 +197,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <h6 class="card-subtitle mb-2 text-muted"><?php echo __t('order_id'); ?>: #<?php echo $order['id']; ?></h6>
                                             <p class="card-text">
                                                 <strong><?php echo __t('date'); ?>:</strong> <?php echo date('Y-m-d H:i', strtotime($order['created_at'])); ?><br>
-                                                <strong><?php echo __t('total'); ?>:</strong> $<?php echo number_format($order['total'], 2); ?><br>
+                                                <strong><?php echo __t('total'); ?>:</strong> <?php echo formatPrice($order['total_amount']); ?><br>
                                                 <strong><?php echo __t('status'); ?>:</strong> 
                                                 <span class="badge bg-warning"><?php echo __t($order['status']); ?></span>
                                             </p>
@@ -215,7 +224,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <h6 class="card-subtitle mb-2 text-muted"><?php echo __t('order_id'); ?>: #<?php echo $order['id']; ?></h6>
                                             <p class="card-text">
                                                 <strong><?php echo __t('date'); ?>:</strong> <?php echo date('Y-m-d H:i', strtotime($order['created_at'])); ?><br>
-                                                <strong><?php echo __t('total'); ?>:</strong> $<?php echo number_format($order['total'], 2); ?><br>
+                                                <strong><?php echo __t('total'); ?>:</strong> <?php echo formatPrice($order['total_amount']); ?><br>
                                                 <strong><?php echo __t('status'); ?>:</strong> 
                                                 <span class="badge bg-success"><?php echo __t($order['status']); ?></span>
                                             </p>
