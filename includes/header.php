@@ -84,6 +84,44 @@ updateUserSession();
         .cart-badge-pop {
             animation: cartBadgePop 0.5s ease;
         }
+        .user-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .user-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            z-index: 1000;
+            right: 0;
+            margin-top: 0.5rem;
+        }
+        .user-dropdown:hover .user-dropdown-content {
+            display: block;
+        }
+        .user-dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+        .user-dropdown-content a:hover {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .user-dropdown-content:before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 20px;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #fff;
+        }
     </style>
 </head>
 <body>
@@ -99,7 +137,12 @@ updateUserSession();
 
             <div>
                 <?php if(isset($_SESSION['user_id'])): ?>
-                    <span class="me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+                    <div class="user-dropdown">
+                        <span class="me-3" style="cursor: pointer;">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
+                        <div class="user-dropdown-content">
+                            <a href="/ecommerce/profile.php"><?= __t('nav.profile') ?></a>
+                        </div>
+                    </div>
                     <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>
                         <a href="/ecommerce/admin/index.php" class="btn btn-primary me-2">Admin Panel</a>
                     <?php endif; ?>
