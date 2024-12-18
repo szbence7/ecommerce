@@ -3,11 +3,10 @@ require_once 'auth_check.php';
 session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/language.php';
 
-// Get current language from settings
-$stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'admin_language'");
-$stmt->execute();
-$language = $stmt->fetchColumn() ?: 'en';
+// Get current language
+$language = getCurrentLanguage();
 
 // Function to get translation
 function getTranslation($key, $language, $pdo) {
