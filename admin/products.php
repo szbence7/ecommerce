@@ -11,23 +11,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 1) {
     exit();
 }
 
-// Check for expired discounts
-$currentDateTime = date('Y-m-d H:i:s');
-$stmt = $pdo->prepare("
-    UPDATE products 
-    SET is_on_sale = 0, 
-        discount_price = NULL, 
-        discount_end_time = NULL 
-    WHERE is_on_sale = 1 
-    AND discount_end_time IS NOT NULL 
-    AND discount_end_time <= ?
-");
-$stmt->execute([$currentDateTime]);
-$updatedCount = $stmt->rowCount();
-if ($updatedCount > 0) {
-    error_log("Updated $updatedCount products with expired discounts at $currentDateTime");
-}
-
 include 'layout/header.php';
 
 // Termék törlése
