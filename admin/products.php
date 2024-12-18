@@ -196,13 +196,14 @@ $products = $stmt->fetchAll();
                                 <td><?php echo $product['id']; ?></td>
                                 <td>
                                     <?php if ($product['is_on_sale']): ?>
-                                        <i class="text-success" data-lucide="check-circle"></i>
                                         <?php if (!empty($product['discount_end_time'])): ?>
                                             <i class="text-warning" data-lucide="timer" 
                                                data-bs-toggle="tooltip" 
                                                data-bs-placement="top" 
                                                title="Expires: <?php echo date('Y-m-d H:i', strtotime($product['discount_end_time'])); ?>">
                                             </i>
+                                        <?php else: ?>
+                                            <i class="text-success" data-lucide="check-circle"></i>
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <i class="text-danger" data-lucide="x-circle"></i>
