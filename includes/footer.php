@@ -13,40 +13,5 @@
         <script>
             lucide.createIcons();
         </script>
-        <script>
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        const searchResults = document.getElementById('searchResults');
-        
-        searchInput.addEventListener('input', function() {
-            console.log('Search input:', this.value);  // Keresési kifejezés kiírása
-            if (this.value.length >= 3) {
-                fetch('search.php?q=' + this.value)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Search results:', data);  // Találatok kiírása
-                        let html = '';
-                        data.forEach(product => {
-                            html += `
-                                <a href="${product.url}" class="d-block p-2 text-decoration-none text-dark hover-bg-light">
-                                    ${product.name} - ${product.price}
-                                </a>
-                            `;
-                        });
-                        searchResults.innerHTML = html;
-                        searchResults.style.display = data.length ? 'block' : 'none';
-                    });
-            } else {
-                searchResults.style.display = 'none';
-            }
-        });
-
-        // Hide search results when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.style.display = 'none';
-            }
-        });
-        </script>
     </body>
-</html> 
+</html>
