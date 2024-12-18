@@ -155,12 +155,12 @@ updateUserSession();
                     <div class="user-dropdown">
                         <span class="user-dropdown-trigger me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
                         <div class="user-dropdown-content">
+                            <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>
+                                <a href="/ecommerce/admin/index.php">Admin Panel</a>
+                            <?php endif; ?>
                             <a href="/ecommerce/profile.php"><?= __t('nav.profile') ?></a>
                         </div>
                     </div>
-                    <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>
-                        <a href="/ecommerce/admin/index.php" class="btn btn-primary me-2">Admin Panel</a>
-                    <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline-primary me-2"><?= __t('nav.logout') ?></a>
                 <?php else: ?>
                     <a href="login.php" class="btn btn-outline-primary me-2"><?= __t('nav.login') ?></a>
