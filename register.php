@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error = "Email already exists";
         } else {
             // Insert new user with role 3 (simple user)
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, password, user_role) VALUES (?, ?, ?, 3)");
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 3)");
             if ($stmt->execute([$name, $email, $password])) {
                 $_SESSION['user_id'] = $pdo->lastInsertId();
                 $_SESSION['user_role'] = 3;

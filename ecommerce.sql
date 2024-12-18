@@ -208,6 +208,7 @@ CREATE TABLE `product_translations` (
   `language_code` varchar(5) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
+  `short_description` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -216,31 +217,31 @@ CREATE TABLE `product_translations` (
 -- Dumping data for table `product_translations`
 --
 
-INSERT INTO `product_translations` (`product_id`, `language_code`, `name`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'hu', 'iPhone 14 Pro', 'A legújabb Apple okostelefon fejlett funkciókkal', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(1, 'en', 'iPhone 14 Pro', 'Latest Apple smartphone with advanced features', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(2, 'hu', 'Samsung 4K TV', '55 inches Smart LED TV HDR technológiával', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(2, 'en', 'Samsung 4K TV', '55-inch Smart LED TV with HDR', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(3, 'hu', 'MacBook Air M2', '13 inches laptop Apple M2 processzorral', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(3, 'en', 'MacBook Air M2', '13-inch laptop with Apple M2 chip', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(4, 'hu', 'Klasszikus Kék Farmer', 'Kényelmes pamut farmer', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(4, 'en', 'Classic Blue Jeans', 'Comfortable cotton denim jeans', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(5, 'hu', 'Fehér Sportcipő', 'Alkalmi sportcipő', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(5, 'en', 'White Sneakers', 'Casual athletic shoes', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(6, 'hu', 'Pamut Póló', 'Kerek nyakú alapdarab póló', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(6, 'en', 'Cotton T-Shirt', 'Basic crew neck t-shirt', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(7, 'hu', 'A Programozás Művészete', 'Átfogó programozási útmutató', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(7, 'en', 'The Art of Programming', 'Comprehensive guide to programming', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(8, 'hu', 'Főzési Alapok', 'Tanulj meg főzni, mint egy séf', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(8, 'en', 'Cooking Basics', 'Learn to cook like a chef', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(9, 'hu', 'Sci-fi Gyűjtemény', '2023 legjobb sci-fi történetei', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(9, 'en', 'Science Fiction Collection', 'Best sci-fi stories of 2023', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(10, 'hu', 'Kerti Szerszámkészlet', 'Alapvető kerti szerszámok teljes készlete', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(10, 'en', 'Garden Tool Set', 'Complete set of essential garden tools', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(11, 'hu', 'Okos LED Izzó', 'WiFi-képes, színváltós izzó', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(11, 'en', 'Smart LED Bulb', 'WiFi-enabled color changing bulb', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(12, 'hu', 'Díszpárna Szett', 'Dekoratív párnák a kanapéra', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
-(12, 'en', 'Throw Pillows Set', 'Decorative pillows for your couch', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
+INSERT INTO `product_translations` (`product_id`, `language_code`, `name`, `description`, `short_description`, `created_at`, `updated_at`) VALUES
+(1, 'hu', 'iPhone 14 Pro', 'A legújabb Apple okostelefon fejlett funkciókkal', 'Csúcskategóriás Apple okostelefon', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(1, 'en', 'iPhone 14 Pro', 'Latest Apple smartphone with advanced features', 'Premium Apple smartphone', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(2, 'hu', 'Samsung 4K TV', '55 inches Smart LED TV HDR technológiával', 'Modern 55" Smart TV', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(2, 'en', 'Samsung 4K TV', '55-inch Smart LED TV with HDR', 'Modern 55" Smart TV', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(3, 'hu', 'MacBook Air M2', '13 inches laptop Apple M2 processzorral', 'Ultrakönnyű M2 laptop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(3, 'en', 'MacBook Air M2', '13-inch laptop with Apple M2 chip', 'Ultralight M2 laptop', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(4, 'hu', 'Klasszikus Kék Farmer', 'Kényelmes pamut farmer', 'Kényelmes farmer', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(4, 'en', 'Classic Blue Jeans', 'Comfortable cotton denim jeans', 'Comfortable jeans', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(5, 'hu', 'Fehér Sportcipő', 'Alkalmi sportcipő', 'Divatos tornacipő', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(5, 'en', 'White Sneakers', 'Casual athletic shoes', 'Stylish sneakers', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(6, 'hu', 'Pamut Póló', 'Kerek nyakú alapdarab póló', 'Alapdarab póló', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(6, 'en', 'Cotton T-Shirt', 'Basic crew neck t-shirt', 'Basic t-shirt', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(7, 'hu', 'A Programozás Művészete', 'Átfogó programozási útmutató', 'Programozási kézikönyv', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(7, 'en', 'The Art of Programming', 'Comprehensive guide to programming', 'Programming handbook', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(8, 'hu', 'Főzési Alapok', 'Tanulj meg főzni, mint egy séf', 'Kezdő szakácskönyv', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(8, 'en', 'Cooking Basics', 'Learn to cook like a chef', 'Beginner cookbook', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(9, 'hu', 'Sci-fi Gyűjtemény', '2023 legjobb sci-fi történetei', 'Modern sci-fi antológia', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(9, 'en', 'Science Fiction Collection', 'Best sci-fi stories of 2023', 'Modern sci-fi anthology', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(10, 'hu', 'Kerti Szerszámkészlet', 'Alapvető kerti szerszámok teljes készlete', 'Komplett szerszámkészlet', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(10, 'en', 'Garden Tool Set', 'Complete set of essential garden tools', 'Complete tool set', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(11, 'hu', 'Okos LED Izzó', 'WiFi-képes, színváltós izzó', 'WiFi-s színes izzó', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(11, 'en', 'Smart LED Bulb', 'WiFi-enabled color changing bulb', 'WiFi color bulb', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(12, 'hu', 'Díszpárna Szett', 'Dekoratív párnák a kanapéra', 'Stílusos díszpárnák', '2024-12-17 14:50:44', '2024-12-17 14:50:44'),
+(12, 'en', 'Throw Pillows Set', 'Decorative pillows for your couch', 'Stylish throw pillows', '2024-12-17 14:50:44', '2024-12-17 14:50:44');
 
 -- --------------------------------------------------------
 
