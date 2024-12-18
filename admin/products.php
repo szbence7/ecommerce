@@ -206,7 +206,7 @@ $products = $stmt->fetchAll();
                                             <label class="btn btn-outline-primary" for="discount_50">50%</label>
                                         </div>
                                         <div class="input-group" style="width: 120px;">
-                                            <input type="number" id="custom_discount_percentage" class="form-control" step="0.01" min="0" max="100" placeholder="Custom">
+                                            <input type="number" id="custom_discount_percentage" class="form-control" step="0.01" min="0" max="100" placeholder="">
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
