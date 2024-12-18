@@ -15,22 +15,48 @@ if (!$product) {
 $currentQuantity = isset($_SESSION['cart'][$product['id']]) ? $_SESSION['cart'][$product['id']] : 1;
 ?>
 
-<div class="row">
-    <div class="col-md-6">
-        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" class="img-fluid" alt="<?= htmlspecialchars($product['name']) ?>">
-    </div>
-    <div class="col-md-6">
-        <h1><?= htmlspecialchars($product['name']) ?></h1>
-        <p class="lead"><?= formatPrice($product['price']) ?></p>
-        <p><?= nl2br(htmlspecialchars($product['description'])) ?></p>
-        
-        <div class="d-flex align-items-center gap-3 mb-3">
-            <button onclick="updateQuantity('decrease')" class="btn btn-outline-secondary">-</button>
-            <span id="quantity" class="fs-5"><?= $currentQuantity ?></span>
-            <button onclick="updateQuantity('increase')" class="btn btn-outline-secondary">+</button>
+<div class="container py-5">
+    <div class="row g-5">
+        <div class="col-lg-7">
+            <div class="position-sticky" style="top: 2rem;">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop" 
+                     class="img-fluid rounded-3 w-100 object-fit-cover" style="max-height: 600px;" 
+                     alt="<?= htmlspecialchars($product['name']) ?>">
+            </div>
         </div>
-
-        <button onclick="updateCartToQuantity()" class="btn btn-lg btn-success">Update Cart</button>
+        <div class="col-lg-5">
+            <div class="product-details">
+                <h1 class="display-5 fw-bold mb-4"><?= htmlspecialchars($product['name']) ?></h1>
+                <p class="h2 text-primary mb-4"><?= formatPrice($product['price']) ?></p>
+                <div class="mb-4">
+                    <p class="text-muted"><?= nl2br(htmlspecialchars($product['description'])) ?></p>
+                </div>
+                
+                <div class="quantity-selector p-3 bg-light rounded-3 mb-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted">Quantity:</span>
+                        <div class="d-flex align-items-center gap-3">
+                            <button onclick="updateQuantity('decrease')" 
+                                    class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" 
+                                    style="width: 38px; height: 38px;">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="quantity" class="fs-4 fw-semibold"><?= $currentQuantity ?></span>
+                            <button onclick="updateQuantity('increase')" 
+                                    class="btn btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" 
+                                    style="width: 38px; height: 38px;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="updateCartToQuantity()" 
+                        class="btn btn-primary w-100 py-3 rounded-3 text-uppercase fw-bold">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
