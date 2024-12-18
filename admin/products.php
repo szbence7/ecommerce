@@ -312,10 +312,6 @@ $products = $stmt->fetchAll();
                                     </div>
                                 </div>
                                 <div class="discount-fields" style="display: none;">
-                                    <div class="mb-3">
-                                        <label for="discount_price" class="form-label">Discount Price</label>
-                                        <input type="number" step="0.01" class="form-control" id="edit_discount_price" name="discount_price" required>
-                                    </div>
                                     <div class="mb-3" id="discount_percentage_container" style="display: none;">
                                         <label class="form-label">Discount Percentage</label>
                                         <div class="d-flex gap-3">
@@ -326,23 +322,24 @@ $products = $stmt->fetchAll();
                                                 <input type="radio" class="btn-check" name="discount_percentage" id="discount_10" value="10" autocomplete="off">
                                                 <label class="btn btn-outline-primary" for="discount_10">10%</label>
                                                 
-                                                <input type="radio" class="btn-check" name="discount_percentage" id="discount_25" value="25" autocomplete="off">
-                                                <label class="btn btn-outline-primary" for="discount_25">25%</label>
-                                                
-                                                <input type="radio" class="btn-check" name="discount_percentage" id="discount_50" value="50" autocomplete="off">
-                                                <label class="btn btn-outline-primary" for="discount_50">50%</label>
+                                                <input type="radio" class="btn-check" name="discount_percentage" id="discount_20" value="20" autocomplete="off">
+                                                <label class="btn btn-outline-primary" for="discount_20">20%</label>
                                             </div>
-                                            <div class="input-group" style="width: 120px;">
-                                                <input type="number" id="custom_discount_percentage" class="form-control" step="0.01" min="0" max="100" placeholder="">
+                                            <div class="input-group" style="width: auto;">
+                                                <input type="number" class="form-control" id="custom_discount_percentage" placeholder="Custom %" style="width: 100px;">
                                                 <span class="input-group-text">%</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mb-3" id="discount_end_time_container" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="discount_price" class="form-label">Discount Price</label>
+                                        <input type="number" step="0.01" class="form-control" id="edit_discount_price" name="discount_price" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3" id="discount_end_time_container" style="display: none;">
                                         <label class="form-label">Discount End Time</label>
                                         <input type="datetime-local" name="discount_end_time" id="edit_discount_end_time" class="form-control">
                                     </div>
-                                </div>
                                 <div class="mb-3">
                                     <label class="form-label">Category</label>
                                     <select name="category_id" id="edit_category_id" class="form-select" required>
