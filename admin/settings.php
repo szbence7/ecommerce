@@ -206,17 +206,16 @@ if ($activeTab === 'dictionary') {
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th><?= __t('admin.settings.dictionary.key', 'admin') ?></th>
+                                        <th style="width: 30%;"><?= __t('admin.settings.dictionary.key', 'admin') ?></th>
                                         <th><?= __t('admin.settings.dictionary.value', 'admin') ?></th>
-                                        <th><?= __t('admin.settings.dictionary.context', 'admin') ?></th>
-                                        <th><?= __t('admin.settings.dictionary.language', 'admin') ?></th>
-                                        <th>Actions</th>
+                                        <th style="width: 100px;"><?= __t('admin.settings.dictionary.context', 'admin') ?></th>
+                                        <th style="width: 100px;"><?= __t('admin.settings.dictionary.language', 'admin') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($translations as $translation): ?>
                                         <tr>
-                                            <td><?= htmlspecialchars($translation['translation_key']) ?></td>
+                                            <td class="text-break"><?= htmlspecialchars($translation['translation_key']) ?></td>
                                             <td style="min-width: 300px;">
                                                 <div class="input-group">
                                                     <input type="text" 
@@ -236,7 +235,6 @@ if ($activeTab === 'dictionary') {
                                             </td>
                                             <td><?= htmlspecialchars($translation['context']) ?></td>
                                             <td><?= htmlspecialchars($translation['language_code']) ?></td>
-                                            <td></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
