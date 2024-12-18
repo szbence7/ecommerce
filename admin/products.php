@@ -195,8 +195,13 @@ $products = $stmt->fetchAll();
                             <tr data-product-id="<?php echo $product['id']; ?>">
                                 <td><?php echo $product['id']; ?></td>
                                 <td>
-                                    <?php if ((int)$product['is_on_sale'] === 1): ?>
-                                        <i data-lucide="check" class="text-success" style="width: 18px; height: 18px;"></i>
+                                    <?php if ($product['is_on_sale']): ?>
+                                        <i class="text-success" data-lucide="check-circle"></i>
+                                        <?php if (!empty($product['discount_end_time'])): ?>
+                                            <i class="text-warning" data-lucide="timer"></i>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <i class="text-danger" data-lucide="x-circle"></i>
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($product['name']); ?></td>
