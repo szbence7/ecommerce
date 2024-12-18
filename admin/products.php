@@ -182,8 +182,24 @@ $products = $stmt->fetchAll();
                                         <label class="form-check-label" for="edit_is_on_sale">On Sale</label>
                                     </div>
                                 </div>
+                                <div class="mb-3" id="discount_percentage_container" style="display: none;">
+                                    <label class="form-label">Discount Percentage</label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_5" value="5" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="discount_5">5%</label>
+                                        
+                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_10" value="10" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="discount_10">10%</label>
+                                        
+                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_25" value="25" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="discount_25">25%</label>
+                                        
+                                        <input type="radio" class="btn-check" name="discount_percentage" id="discount_50" value="50" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="discount_50">50%</label>
+                                    </div>
+                                </div>
                                 <div class="mb-3" id="discount_price_container" style="display: none;">
-                                    <label class="form-label">Sale Price (EUR)</label>
+                                    <label class="form-label">Discount Price (EUR)</label>
                                     <div class="input-group">
                                         <span class="input-group-text">€</span>
                                         <input type="number" name="discount_price" id="edit_discount_price" class="form-control" step="0.01">
@@ -220,22 +236,43 @@ $products = $stmt->fetchAll();
                 document.getElementById('edit_discount_price').value = product.discount_price || '';
                 toggleDiscountPrice();
                 
-                new bootstrap.Modal(document.getElementById('editModal')).show();
+                var modal = new bootstrap.Modal(document.getElementById('editModal'));
+                modal.show();
             }
 
             function toggleDiscountPrice() {
                 const isOnSale = document.getElementById('edit_is_on_sale').checked;
                 const discountContainer = document.getElementById('discount_price_container');
+                const percentageContainer = document.getElementById('discount_percentage_container');
                 const discountInput = document.getElementById('edit_discount_price');
                 
-                discountContainer.style.display = isOnSale ? 'block' : 'none';
                 if (isOnSale) {
-                    discountInput.setAttribute('required', 'required');
+                    discountContainer.style.display = 'block';
+                    percentageContainer.style.display = 'block';
                 } else {
-                    discountInput.removeAttribute('required');
+                    discountContainer.style.display = 'none';
+                    percentageContainer.style.display = 'none';
+                    discountInput.value = '';
+                    // Uncheck all radio buttons
+                    document.querySelectorAll('input[name="discount_percentage"]').forEach(radio => {
+                        radio.checked = false;
+                    });
                 }
             }
 
+            // Add event listeners for discount percentage radio buttons
+            document.querySelectorAll('input[name="discount_percentage"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const originalPrice = parseFloat(document.getElementById('edit_price').value);
+                    const discountPercentage = parseFloat(this.value);
+                    if (!isNaN(originalPrice) && !isNaN(discountPercentage)) {
+                        const discountedPrice = originalPrice * (1 - discountPercentage / 100);
+                        document.getElementById('edit_discount_price').value = discountedPrice.toFixed(2);
+                    }
+                });
+            });
+
+            // Add event listener for the "On Sale" checkbox
             document.getElementById('edit_is_on_sale').addEventListener('change', toggleDiscountPrice);
             </script>
         </div>
