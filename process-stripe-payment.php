@@ -22,7 +22,7 @@ try {
         throw new Exception('Cart is empty');
     }
 
-    // Calculate total
+    // Calculate total in original currency (HUF)
     $total = 0;
     foreach ($_SESSION['cart'] as $product_id => $quantity) {
         $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
@@ -46,14 +46,19 @@ try {
     $selected_shipping = $_SESSION['checkout']['shipping_method'] ?? 'personal';
     $shipping_cost = floatval($shipping_costs[$selected_shipping] ?? 0);
     
-    // Calculate final total
+    // Calculate final total in original currency
     $final_total = $total + $shipping_cost;
     
-    // Convert to smallest currency unit (pence for GBP)
-    $stripe_amount = (int)round($final_total * 100);
+    // Convert to GBP
+    $rate = getExchangeRate('GBP');
+    $gbp_amount = $final_total * $rate;
     
-    error_log("Final total: " . $final_total);
-    error_log("Stripe amount: " . $stripe_amount);
+    // Convert to pence for Stripe
+    $stripe_amount = (int)round($gbp_amount * 100);
+    
+    error_log("Original amount: " . $final_total);
+    error_log("GBP amount: £" . number_format($gbp_amount, 2));
+    error_log("Stripe amount (pence): " . $stripe_amount);
 
     // Create PaymentIntent
     $payment_intent = \Stripe\PaymentIntent::create([
