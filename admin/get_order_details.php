@@ -134,6 +134,19 @@ function getTranslation($key, $language, $pdo) {
                     </tr>
                 <?php endforeach; ?>
                 <tr>
+                    <td colspan="3" class="text-end"><strong><?php echo getTranslation('admin.orders.table.subtotal', $language, $pdo); ?>:</strong></td>
+                    <td><strong><?php 
+                        $subtotal = array_sum(array_map(function($item) {
+                            return $item['price'] * $item['quantity'];
+                        }, $items));
+                        echo formatPrice($subtotal); 
+                    ?></strong></td>
+                </tr>
+                <tr>
+                    <td colspan="3" class="text-end"><strong><?php echo getTranslation('admin.orders.table.shipping_cost', $language, $pdo); ?>:</strong></td>
+                    <td><strong><?php echo formatPrice($order['shipping_method'] === 'personal' ? 0 : 5.99); ?></strong></td>
+                </tr>
+                <tr class="table-active">
                     <td colspan="3" class="text-end"><strong><?php echo getTranslation('admin.orders.table.total', $language, $pdo); ?>:</strong></td>
                     <td><strong><?php echo formatPrice($order['total_amount']); ?></strong></td>
                 </tr>
