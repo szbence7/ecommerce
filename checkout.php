@@ -92,16 +92,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     order_number, user_id, status, total_amount, payment_method, 
                     payment_status, shipping_method, email, firstname, lastname,
                     street_address, city, country, postal_code
-                ) VALUES (
-                    ?, ?, 'processing', ?, ?, ?, ?, ?, ?, ?,
-                    ?, ?, ?, ?
-                )
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
-            $userId = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : 0;
+            $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+            if (!$userId) {
+                throw new Exception('User must be logged in to place an order');
+            }
+            
             $stmt->execute([
                 $orderNumber,
                 $userId,
+                'processing',
                 $total,
                 $_POST['payment_method'],
                 $paymentStatus,
@@ -139,13 +141,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Commit transaction
             $pdo->commit();
             
-            // Store order number in session for thank you page
+            // Store order number and success status in session
             $_SESSION['order_number'] = $orderNumber;
+            $_SESSION['order_success'] = true;
             
-            // Clear the cart
-            $_SESSION['cart'] = array();
+            // Clear cart
+            unset($_SESSION['cart']);
+            unset($_SESSION['checkout']);
             
-            header('Location: checkout.php?success=true');
+            // Redirect to success page
+            header('Location: order-success.php');
             exit();
             
         } catch (Exception $e) {
