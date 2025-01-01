@@ -1,6 +1,5 @@
 <?php
 require_once 'auth_check.php';
-session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once '../includes/language.php';
@@ -65,7 +64,7 @@ function getTranslation($key, $language, $pdo) {
                 </tr>
                 <tr>
                     <th><?php echo getTranslation('admin.orders.table.phone', $language, $pdo); ?>:</th>
-                    <td><?php echo htmlspecialchars($order['phone']); ?></td>
+                    <td><?php echo isset($order['phone']) ? htmlspecialchars($order['phone']) : '-'; ?></td>
                 </tr>
             </table>
         </div>
