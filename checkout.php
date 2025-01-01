@@ -8,9 +8,13 @@ if (session_status() === PHP_SESSION_NONE) {
 
 if (!defined('INCLUDED_FILES')) {
     define('INCLUDED_FILES', true);
+    require 'vendor/autoload.php';
     require_once 'includes/db.php';
     require_once 'includes/functions.php';
 }
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
 $currentCurrency = getShopCurrency();
 $rate = getExchangeRate($currentCurrency);
@@ -200,7 +204,9 @@ $countries = [
     'CZ' => 'Csehország'
 ];
 
-// Now we can include files that might output content
+// Add this before include 'includes/header.php';
+$stripePublicKey = $_ENV['STRIPE_PUBLIC_KEY'];
+
 include 'includes/header.php';
 
 // Success page (after header)
@@ -333,29 +339,33 @@ $final_total = $total + $shipping_cost;
 
                     <?php elseif ($current_step == 3): ?>
                         <h3>3. Fizetési mód</h3>
-                        <form method="POST">
+                        <form method="POST" id="payment-form">
                             <div class="mb-3">
                                 <label class="form-label">Válassza ki a fizetési módot:</label>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="card" value="card" <?php echo ($_SESSION['checkout']['payment_method'] == 'card') ? 'checked' : ''; ?>>
+                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="card" value="card" <?php echo ($_SESSION['checkout']['payment_method'] == 'card') ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="card">
                                         Bankkártya
                                     </label>
+                                    <div id="card-element-container" style="display: none;" class="mt-3">
+                                        <div id="payment-element"></div>
+                                        <div id="payment-message" class="hidden"></div>
+                                    </div>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="transfer" value="transfer" <?php echo ($_SESSION['checkout']['payment_method'] == 'transfer') ? 'checked' : ''; ?>>
+                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="transfer" value="transfer" <?php echo ($_SESSION['checkout']['payment_method'] == 'transfer') ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="transfer">
                                         Banki átutalás
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="payment_method" id="cash_on_delivery" value="cash_on_delivery" <?php echo ($_SESSION['checkout']['payment_method'] == 'cash_on_delivery') ? 'checked' : ''; ?>>
+                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="cash_on_delivery" value="cash_on_delivery" <?php echo ($_SESSION['checkout']['payment_method'] == 'cash_on_delivery') ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="cash_on_delivery">
                                         Utánvét
                                     </label>
                                 </div>
                             </div>
-                            <button type="submit" name="complete_order" class="btn btn-primary">Rendelés véglegesítése</button>
+                            <button type="submit" id="submit-button" name="complete_order" class="btn btn-primary">Rendelés véglegesítése</button>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -433,5 +443,156 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<?php if ($current_step == 3): ?>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const stripe = Stripe('<?php echo $stripePublicKey; ?>');
+let elements;
+let paymentElement;
+let clientSecret;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentForm = document.getElementById('payment-form');
+    const submitButton = document.getElementById('submit-button');
+    const paymentMethodRadios = document.querySelectorAll('.payment-method-radio');
+    const cardElementContainer = document.getElementById('card-element-container');
+    const messageDiv = document.getElementById('payment-message');
+
+    async function handlePaymentMethodChange() {
+        const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        if (selectedPaymentMethod === 'card') {
+            cardElementContainer.style.display = 'block';
+            messageDiv.classList.remove('hidden');
+            
+            if (!elements) {
+                messageDiv.textContent = 'Initializing payment...';
+                messageDiv.style.color = 'rgb(105, 115, 134)';
+                
+                try {
+                    const response = await fetch('process-stripe-payment.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Payment initialization response:', data);
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    if (!data.clientSecret) {
+                        throw new Error('No client secret received');
+                    }
+
+                    clientSecret = data.clientSecret;
+                    elements = stripe.elements({
+                        clientSecret: clientSecret,
+                        appearance: {
+                            theme: 'stripe'
+                        }
+                    });
+                    
+                    paymentElement = elements.create('payment');
+                    paymentElement.mount('#payment-element');
+                    messageDiv.classList.add('hidden');
+                } catch (error) {
+                    console.error('Initialization Error:', error);
+                    messageDiv.textContent = error.message;
+                    messageDiv.classList.remove('hidden');
+                    messageDiv.style.color = 'red';
+                }
+            }
+        } else {
+            cardElementContainer.style.display = 'none';
+            messageDiv.classList.add('hidden');
+        }
+    }
+
+    // Initialize payment method display
+    handlePaymentMethodChange();
+
+    // Add change event listeners to radio buttons
+    paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', handlePaymentMethodChange);
+    });
+
+    paymentForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+        if (selectedPaymentMethod === 'card') {
+            submitButton.disabled = true;
+            messageDiv.textContent = 'Processing payment...';
+            messageDiv.classList.remove('hidden');
+            messageDiv.style.color = 'rgb(105, 115, 134)';
+            
+            try {
+                if (!elements || !clientSecret) {
+                    throw new Error('Payment not initialized properly');
+                }
+
+                const {error} = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        return_url: `${window.location.origin}/order-success.php`,
+                        payment_method_data: {
+                            billing_details: {
+                                name: '<?php echo htmlspecialchars($_SESSION['checkout']['firstname'] . ' ' . $_SESSION['checkout']['lastname']); ?>',
+                                email: '<?php echo htmlspecialchars($_SESSION['checkout']['email']); ?>',
+                                address: {
+                                    city: '<?php echo htmlspecialchars($_SESSION['checkout']['city']); ?>',
+                                    country: '<?php echo htmlspecialchars($_SESSION['checkout']['country']); ?>',
+                                    line1: '<?php echo htmlspecialchars($_SESSION['checkout']['street_address']); ?>',
+                                    postal_code: '<?php echo htmlspecialchars($_SESSION['checkout']['postal_code']); ?>'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (error) {
+                    throw error;
+                }
+            } catch (error) {
+                console.error('Payment Error:', error);
+                messageDiv.textContent = error.message || 'An error occurred during payment.';
+                messageDiv.style.color = 'red';
+                messageDiv.classList.remove('hidden');
+                submitButton.disabled = false;
+            }
+        } else {
+            // For other payment methods, submit the form normally
+            event.target.submit();
+        }
+    });
+});
+</script>
+<style>
+.hidden {
+    display: none;
+}
+#payment-message {
+    color: rgb(105, 115, 134);
+    font-size: 16px;
+    line-height: 20px;
+    padding-top: 12px;
+    text-align: center;
+}
+#payment-element {
+    margin-bottom: 24px;
+}
+</style>
+<?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>
