@@ -12,6 +12,9 @@ if (!defined('INCLUDED_FILES')) {
     require_once 'includes/functions.php';
 }
 
+$currentCurrency = getShopCurrency();
+$rate = getExchangeRate($currentCurrency);
+
 // Initialize step if not set
 $current_step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
 
@@ -364,7 +367,7 @@ $final_total = $total + $shipping_cost;
                             <div class="product-item mb-2">
                                 <div class="d-flex justify-content-between">
                                     <span><?php echo $product['name']; ?></span>
-                                    <span><?php echo number_format($product['price'], 2); ?> €</span>
+                                    <span><?php echo formatPrice($product['price']); ?></span>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -373,14 +376,14 @@ $final_total = $total + $shipping_cost;
                             <hr>
                             <div class="d-flex justify-content-between shipping-cost-row">
                                 <span>Szállítási költség:</span>
-                                <span class="shipping-cost"><?php echo number_format($shipping_cost, 2); ?> €</span>
+                                <span class="shipping-cost"><?php echo formatPrice($shipping_cost); ?></span>
                             </div>
                         <?php endif; ?>
                         
                         <hr>
                         <div class="d-flex justify-content-between">
                             <strong>Teljes fizetendő:</strong>
-                            <strong class="final-total"><?php echo number_format($final_total, 2); ?> €</strong>
+                            <strong class="final-total"><?php echo formatPrice($final_total); ?></strong>
                         </div>
                     </div>
                 </div>
@@ -408,8 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const subtotal = <?php echo $total; ?>;
                 const newTotal = subtotal + shippingCost;
                 
-                document.querySelector('.shipping-cost').textContent = shippingCost.toFixed(2) + ' €';
-                document.querySelector('.final-total').textContent = newTotal.toFixed(2) + ' €';
+                document.querySelector('.shipping-cost').textContent = '<?php echo formatPrice("' + shippingCost + '"); ?>';
+                document.querySelector('.final-total').textContent = '<?php echo formatPrice("' + newTotal + '"); ?>';
             });
         });
     }
