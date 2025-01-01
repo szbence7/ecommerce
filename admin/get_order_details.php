@@ -16,7 +16,16 @@ if (!isset($_GET['id'])) {
 $stmt = $pdo->prepare("
     SELECT o.*, 
            CONCAT(o.firstname, ' ', o.lastname) as customer_name,
-           o.email as customer_email
+           o.email as customer_email,
+           COALESCE(
+               (SELECT SUM(oi.quantity * oi.price)
+                FROM order_items oi
+                WHERE oi.order_id = o.id), 0
+           ) + 
+           CASE 
+               WHEN o.shipping_method = 'personal' THEN 0
+               ELSE 5.99
+           END as total_amount
     FROM orders o 
     WHERE o.id = ?
 ");
@@ -126,7 +135,7 @@ function getTranslation($key, $language, $pdo) {
                 <?php endforeach; ?>
                 <tr>
                     <td colspan="3" class="text-end"><strong><?php echo getTranslation('admin.orders.table.total', $language, $pdo); ?>:</strong></td>
-                    <td><strong><?php echo formatPrice($order['total']); ?></strong></td>
+                    <td><strong><?php echo formatPrice($order['total_amount']); ?></strong></td>
                 </tr>
             </tbody>
         </table>
