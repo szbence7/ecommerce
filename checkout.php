@@ -411,8 +411,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 const subtotal = <?php echo $total; ?>;
                 const newTotal = subtotal + shippingCost;
                 
-                document.querySelector('.shipping-cost').textContent = '<?php echo formatPrice("' + shippingCost + '"); ?>';
-                document.querySelector('.final-total').textContent = '<?php echo formatPrice("' + newTotal + '"); ?>';
+                // Use PHP's formatPrice function through AJAX
+                fetch(`format_price.php?price=${shippingCost}`)
+                    .then(response => response.text())
+                    .then(formattedShippingCost => {
+                        document.querySelector('.shipping-cost').textContent = formattedShippingCost;
+                    });
+                
+                fetch(`format_price.php?price=${newTotal}`)
+                    .then(response => response.text())
+                    .then(formattedTotal => {
+                        document.querySelector('.final-total').textContent = formattedTotal;
+                    });
             });
         });
     }

@@ -4,5 +4,7 @@ require_once 'includes/functions.php';
 
 header('Content-Type: text/plain');
 
-$price = isset($_GET['price']) ? floatval($_GET['price']) : 0;
-echo formatPrice($price);
+if (isset($_GET['price'])) {
+    $price = floatval($_GET['price']);
+    echo formatPrice($price);
+}
