@@ -41,7 +41,25 @@ $stmt = $pdo->prepare("
            o.payment_method,
            o.payment_status,
            o.shipping_method,
-           o.order_number
+           o.order_number,
+           COALESCE(
+               (SELECT SUM(oi.quantity * oi.price)
+                FROM order_items oi
+                WHERE oi.order_id = o.id), 0
+           ) as subtotal,
+           CASE 
+               WHEN o.shipping_method = 'personal' THEN 0
+               ELSE 5.99
+           END as shipping_cost,
+           COALESCE(
+               (SELECT SUM(oi.quantity * oi.price)
+                FROM order_items oi
+                WHERE oi.order_id = o.id), 0
+           ) + 
+           CASE 
+               WHEN o.shipping_method = 'personal' THEN 0
+               ELSE 5.99
+           END as total_amount
     FROM orders o 
     ORDER BY o.created_at DESC
     LIMIT 10

@@ -80,7 +80,16 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 // Get user orders
 $stmt = $pdo->prepare("
     SELECT o.*, 
-           COALESCE(SUM(oi.quantity * oi.price), 0) as total_amount
+           COALESCE(SUM(oi.quantity * oi.price), 0) as subtotal,
+           CASE 
+               WHEN o.shipping_method = 'personal' THEN 0
+               ELSE 5.99
+           END as shipping_cost,
+           COALESCE(SUM(oi.quantity * oi.price), 0) + 
+           CASE 
+               WHEN o.shipping_method = 'personal' THEN 0
+               ELSE 5.99
+           END as total_amount
     FROM orders o
     LEFT JOIN order_items oi ON o.id = oi.order_id
     WHERE o.user_id = ?
