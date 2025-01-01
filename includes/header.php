@@ -142,7 +142,7 @@ updateUserSession();
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="/ecommerce/index.php"><?= __t('nav.home') ?></a>
+            <a class="navbar-brand" href="index.php"><?= __t('nav.home') ?></a>
             
             <!-- Search Bar -->
             <div class="search-container">
@@ -156,9 +156,9 @@ updateUserSession();
                         <span class="user-dropdown-trigger me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
                         <div class="user-dropdown-content">
                             <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>
-                                <a href="/ecommerce/admin/index.php">Admin Panel</a>
+                                <a href="/admin/index.php">Admin Panel</a>
                             <?php endif; ?>
-                            <a href="/ecommerce/profile.php"><?= __t('nav.profile') ?></a>
+                            <a href="profile.php"><?= __t('nav.profile') ?></a>
                         </div>
                     </div>
                     <a href="logout.php" class="btn btn-outline-primary me-2"><?= __t('nav.logout') ?></a>

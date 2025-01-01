@@ -1,6 +1,8 @@
 <?php
 require_once 'auth_check.php';
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once '../includes/language.php';
