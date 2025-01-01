@@ -16,6 +16,98 @@ if (!defined('INCLUDED_FILES')) {
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+// Handle successful Stripe payment
+if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['payment_intent'])) {
+    try {
+        \Stripe\Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
+        
+        // Verify the payment
+        $payment_intent = \Stripe\PaymentIntent::retrieve($_GET['payment_intent']);
+        
+        if ($payment_intent->status === 'succeeded') {
+            // Generate order number
+            $orderNumber = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
+            
+            // Start transaction
+            $pdo->beginTransaction();
+            
+            // Insert order
+            $stmt = $pdo->prepare("
+                INSERT INTO orders (
+                    order_number, user_id, status, total_amount, payment_method, 
+                    payment_status, shipping_method, email, firstname, lastname,
+                    street_address, city, country, postal_code
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            
+            $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
+            if (!$userId) {
+                throw new Exception('User must be logged in to place an order');
+            }
+            
+            $stmt->execute([
+                $orderNumber,
+                $userId,
+                'processing',
+                $payment_intent->amount / 100, // Convert back from pence
+                'card',
+                'paid',
+                $_SESSION['checkout']['shipping_method'],
+                $_SESSION['checkout']['email'],
+                $_SESSION['checkout']['firstname'],
+                $_SESSION['checkout']['lastname'],
+                $_SESSION['checkout']['street_address'],
+                $_SESSION['checkout']['city'],
+                $_SESSION['checkout']['country'],
+                $_SESSION['checkout']['postal_code']
+            ]);
+            
+            $orderId = $pdo->lastInsertId();
+            
+            // Insert order items
+            $stmt = $pdo->prepare("
+                INSERT INTO order_items (order_id, product_id, quantity, price)
+                VALUES (?, ?, ?, ?)
+            ");
+            
+            foreach ($_SESSION['cart'] as $product_id => $quantity) {
+                $priceStmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
+                $priceStmt->execute([$product_id]);
+                $product = $priceStmt->fetch();
+                
+                $stmt->execute([
+                    $orderId,
+                    $product_id,
+                    $quantity,
+                    $product['price']
+                ]);
+            }
+            
+            // Commit transaction
+            $pdo->commit();
+            
+            // Store order number and success status in session
+            $_SESSION['order_number'] = $orderNumber;
+            $_SESSION['order_success'] = true;
+            
+            // Clear cart and checkout data
+            unset($_SESSION['cart']);
+            unset($_SESSION['checkout']);
+            
+            // Redirect to success page
+            header('Location: order-success.php?success=true');
+            exit();
+        }
+    } catch (Exception $e) {
+        error_log("Error processing payment: " . $e->getMessage());
+        if (isset($pdo) && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        header('Location: checkout.php?step=3&error=payment');
+        exit();
+    }
+}
+
 $currentCurrency = getShopCurrency();
 $rate = getExchangeRate($currentCurrency);
 
@@ -450,7 +542,6 @@ document.addEventListener('DOMContentLoaded', function() {
 const stripe = Stripe('<?php echo $stripePublicKey; ?>');
 let elements;
 let paymentElement;
-let clientSecret;
 
 document.addEventListener('DOMContentLoaded', function() {
     const paymentForm = document.getElementById('payment-form');
@@ -465,22 +556,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedPaymentMethod === 'card') {
             cardElementContainer.style.display = 'block';
             messageDiv.classList.remove('hidden');
+            messageDiv.textContent = 'Loading payment form...';
             
             if (!elements) {
-                messageDiv.textContent = 'Initializing payment...';
-                messageDiv.style.color = 'rgb(105, 115, 134)';
-                
                 try {
                     const response = await fetch('process-stripe-payment.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
+                        method: 'POST'
                     });
                     
                     if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                        throw new Error('Network response was not ok');
                     }
                     
                     const data = await response.json();
@@ -489,26 +574,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.error) {
                         throw new Error(data.error);
                     }
-                    
-                    if (!data.clientSecret) {
-                        throw new Error('No client secret received');
-                    }
 
-                    clientSecret = data.clientSecret;
                     elements = stripe.elements({
-                        clientSecret: clientSecret,
+                        clientSecret: data.clientSecret,
                         appearance: {
                             theme: 'stripe'
                         }
                     });
                     
                     paymentElement = elements.create('payment');
-                    paymentElement.mount('#payment-element');
+                    await paymentElement.mount('#payment-element');
                     messageDiv.classList.add('hidden');
                 } catch (error) {
-                    console.error('Initialization Error:', error);
+                    console.error('Error:', error);
                     messageDiv.textContent = error.message;
-                    messageDiv.classList.remove('hidden');
                     messageDiv.style.color = 'red';
                 }
             }
@@ -538,26 +617,14 @@ document.addEventListener('DOMContentLoaded', function() {
             messageDiv.style.color = 'rgb(105, 115, 134)';
             
             try {
-                if (!elements || !clientSecret) {
-                    throw new Error('Payment not initialized properly');
+                if (!elements) {
+                    throw new Error('Payment form not initialized');
                 }
 
                 const {error} = await stripe.confirmPayment({
                     elements,
                     confirmParams: {
-                        return_url: `${window.location.origin}/order-success.php`,
-                        payment_method_data: {
-                            billing_details: {
-                                name: '<?php echo htmlspecialchars($_SESSION['checkout']['firstname'] . ' ' . $_SESSION['checkout']['lastname']); ?>',
-                                email: '<?php echo htmlspecialchars($_SESSION['checkout']['email']); ?>',
-                                address: {
-                                    city: '<?php echo htmlspecialchars($_SESSION['checkout']['city']); ?>',
-                                    country: '<?php echo htmlspecialchars($_SESSION['checkout']['country']); ?>',
-                                    line1: '<?php echo htmlspecialchars($_SESSION['checkout']['street_address']); ?>',
-                                    postal_code: '<?php echo htmlspecialchars($_SESSION['checkout']['postal_code']); ?>'
-                                }
-                            }
-                        }
+                        return_url: `${window.location.origin}/checkout.php?step=3&payment=success`,
                     }
                 });
 
@@ -566,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Payment Error:', error);
-                messageDiv.textContent = error.message || 'An error occurred during payment.';
+                messageDiv.textContent = error.message;
                 messageDiv.style.color = 'red';
                 messageDiv.classList.remove('hidden');
                 submitButton.disabled = false;
