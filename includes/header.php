@@ -166,8 +166,7 @@ updateUserSession();
 
             <div>
                 <?php if(isset($_SESSION['user_id'])): ?>
-                    <div class="user-dropdown">
-                        <?php
+                    <?php
                         // Get user's points balance
                         $stmt = $pdo->prepare("SELECT points_balance FROM users WHERE id = ?");
                         $stmt->execute([$_SESSION['user_id']]);
@@ -177,6 +176,8 @@ updateUserSession();
                             <i class="bi bi-star-fill"></i>Pontegyenleg: 
                             <?= str_replace('{points}', number_format($points), __t('user.points')) ?>
                         </span>
+                    <div class="user-dropdown">
+                        
                         <span class="user-dropdown-trigger me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
                         <div class="user-dropdown-content">
                             <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>

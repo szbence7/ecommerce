@@ -223,7 +223,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php 
                             $pending_orders = false;
                             foreach ($orders as $order) {
-                                if ($order['status'] != 'fulfilled') {
+                                if ($order['status'] != 'fulfilled' && $order['status'] != 'delivered') {
                                     $pending_orders = true;
                                     ?>
                                     <div class="card mb-3">
@@ -250,7 +250,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php 
                             $fulfilled_orders = false;
                             foreach ($orders as $order) {
-                                if ($order['status'] == 'fulfilled') {
+                                if ($order['status'] == 'fulfilled' || $order['status'] == 'delivered') {
                                     $fulfilled_orders = true;
                                     ?>
                                     <div class="card mb-3">
