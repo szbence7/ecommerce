@@ -204,16 +204,20 @@ if (isset($order)) {
                     $isCardPaid = $order['payment_method'] !== 'cash_on_delivery' && $paymentCompleted;
                     
                     // Set current step based on order status and payment completion
-                    if (!$paymentCompleted && !$isCOD) {
-                        $currentStep = 0; // Only "Ordered" step is completed
-                    } elseif ($isCardPaid) {
-                        $currentStep = array_search('Processing', $steps); // Mark "Payment" and "Processing" as complete for card payments
-                    } else {
-                        $currentStep = array_search(ucfirst($order['status']), $steps);
+                    $currentStep = 0;
+                    
+                    if ($order['status'] === 'shipped') {
+                        $currentStep = array_search('Shipped', $steps);
+                    } elseif ($order['status'] === 'delivered') {
+                        $currentStep = array_search('Delivered', $steps);
+                    } elseif ($order['status'] === 'processing') {
+                        $currentStep = array_search('Processing', $steps);
+                    } elseif ($paymentCompleted || $isCOD) {
+                        $currentStep = array_search('Payment', $steps);
                     }
                     
                     foreach ($steps as $index => $step):
-                        $isActive = ($isCOD && $index <= 1) || (!$isCOD && $index <= $currentStep);
+                        $isActive = $index <= $currentStep;
                     ?>
                     <div class="timeline-step <?= $isActive ? 'active' : '' ?>">
                         <div class="step-icon">
