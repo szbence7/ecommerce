@@ -95,16 +95,19 @@ if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['pa
             
             $orderId = $pdo->lastInsertId();
             
-            // Insert order items
+            // Insert order items and calculate total for points
             $stmt = $pdo->prepare("
                 INSERT INTO order_items (order_id, product_id, quantity, price)
                 VALUES (?, ?, ?, ?)
             ");
             
+            // Calculate total for points (excluding shipping)
+            $total = 0;
             foreach ($_SESSION['cart'] as $product_id => $quantity) {
                 $priceStmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
                 $priceStmt->execute([$product_id]);
                 $product = $priceStmt->fetch();
+                $total += $product['price'] * $quantity;
                 
                 $stmt->execute([
                     $orderId,
@@ -132,7 +135,6 @@ if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['pa
             // Redirect to success page
             header('Location: order-success.php');
             exit();
-            
         } else {
             // Log unexpected payment status
             error_log("Unexpected payment status for PaymentIntent {$payment_intent->id}: {$payment_intent->status}");
