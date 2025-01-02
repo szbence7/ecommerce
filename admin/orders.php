@@ -33,6 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset(
     exit();
 }
 
+// Get current page from URL parameter
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$orders_per_page = 10;
+$offset = ($current_page - 1) * $orders_per_page;
+
+// Get total number of orders for pagination
+$total_orders_stmt = $pdo->query("SELECT COUNT(*) FROM orders");
+$total_orders = $total_orders_stmt->fetchColumn();
+$total_pages = ceil($total_orders / $orders_per_page);
+
 // Get all orders with payment and shipping details
 $stmt = $pdo->prepare("
     SELECT o.*, 
@@ -62,9 +72,9 @@ $stmt = $pdo->prepare("
            END as total_amount
     FROM orders o 
     ORDER BY o.created_at DESC
-    LIMIT 10
+    LIMIT ? OFFSET ?
 ");
-$stmt->execute();
+$stmt->execute([$orders_per_page, $offset]);
 $orders = $stmt->fetchAll();
 
 // Helper function to get payment status badge class
@@ -176,6 +186,55 @@ function getOrderStatusBadgeClass($status) {
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <?php if ($total_pages > 1): ?>
+            <nav aria-label="Orders pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <?php if ($current_page > 1): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<?php echo $current_page - 1; ?>" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php
+                    // Show up to 5 pages around current page
+                    $start_page = max(1, $current_page - 2);
+                    $end_page = min($total_pages, $current_page + 2);
+
+                    if ($start_page > 1) {
+                        echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
+                        if ($start_page > 2) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                    }
+
+                    for ($i = $start_page; $i <= $end_page; $i++) {
+                        echo '<li class="page-item ' . ($i == $current_page ? 'active' : '') . '">';
+                        echo '<a class="page-link" href="?page=' . $i . '">' . $i . '</a>';
+                        echo '</li>';
+                    }
+
+                    if ($end_page < $total_pages) {
+                        if ($end_page < $total_pages - 1) {
+                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                        }
+                        echo '<li class="page-item"><a class="page-link" href="?page=' . $total_pages . '">' . $total_pages . '</a></li>';
+                    }
+                    ?>
+
+                    <?php if ($current_page < $total_pages): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?page=<?php echo $current_page + 1; ?>" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </nav>
+            <?php endif; ?>
         </div>
     </div>
 </div>
