@@ -239,11 +239,11 @@ if (isset($order)) {
                         <h6 class="mb-1"><?= htmlspecialchars($item['product_name']) ?></h6>
                         <p class="mb-0 text-muted">
                             Quantity: <?= htmlspecialchars($item['quantity']) ?> × 
-                            $<?= number_format($item['price'], 2) ?>
+                            <?= formatPrice($item['price']) ?>
                         </p>
                     </div>
                     <div class="text-end">
-                        <h6 class="mb-0">$<?= number_format($item['quantity'] * $item['price'], 2) ?></h6>
+                        <h6 class="mb-0"><?= formatPrice($item['quantity'] * $item['price']) ?></h6>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -254,21 +254,21 @@ if (isset($order)) {
                     <div class="col-md-6 offset-md-6">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal</span>
-                            <span>$<?= number_format($orderDetails['subtotal'], 2) ?></span>
+                            <span><?= formatPrice($orderDetails['subtotal']) ?></span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Shipping</span>
-                            <span>$<?= number_format($orderDetails['shipping_cost'], 2) ?></span>
+                            <span><?= formatPrice($orderDetails['shipping_cost']) ?></span>
                         </div>
                         <?php if ($orderDetails['tax'] > 0): ?>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tax</span>
-                            <span>$<?= number_format($orderDetails['tax'], 2) ?></span>
+                            <span><?= formatPrice($orderDetails['tax']) ?></span>
                         </div>
                         <?php endif; ?>
                         <div class="d-flex justify-content-between fw-bold">
                             <span>Total</span>
-                            <span>$<?= number_format($orderDetails['total'], 2) ?></span>
+                            <span><?= formatPrice($orderDetails['total']) ?></span>
                         </div>
                     </div>
                 </div>

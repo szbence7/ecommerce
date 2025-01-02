@@ -235,7 +235,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 <strong><?php echo __t('common.status'); ?>:</strong> 
                                                 <span class="badge bg-warning"><?php echo __t($order['status']); ?></span>
                                             </p>
-                                            <a href="order-details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary"><?php echo __t('orders.view_details'); ?></a>
+                                            <a href="order-details.php?id=<?php echo $order['order_number']; ?>" class="btn btn-sm btn-primary"><?php echo __t('orders.view_details'); ?></a>
                                         </div>
                                     </div>
                                     <?php
@@ -262,7 +262,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                 <strong><?php echo __t('common.status'); ?>:</strong> 
                                                 <span class="badge bg-success"><?php echo __t($order['status']); ?></span>
                                             </p>
-                                            <a href="order-details.php?id=<?php echo $order['id']; ?>" class="btn btn-sm btn-primary"><?php echo __t('orders.view_details'); ?></a>
+                                            <a href="order-details.php?id=<?php echo $order['order_number']; ?>" class="btn btn-sm btn-primary"><?php echo __t('orders.view_details'); ?></a>
                                         </div>
                                     </div>
                                     <?php
