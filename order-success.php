@@ -26,6 +26,7 @@ include 'includes/header.php';
                     <h2 class="card-title mb-4">Köszönjük a rendelését!</h2>
                     <p class="lead">A rendelési száma: <strong><?php echo htmlspecialchars($orderNumber); ?></strong></p>
                     <p class="mt-4">A rendelés részleteiről e-mailben tájékoztatjuk.</p>
+                    <a href="order-details.php?id=<?php echo htmlspecialchars($orderNumber); ?>" class="btn btn-secondary mt-3 me-2">Részletek</a>
                     <a href="index.php" class="btn btn-primary mt-3">Vissza a főoldalra</a>
                 </div>
             </div>

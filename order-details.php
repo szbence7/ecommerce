@@ -1,5 +1,9 @@
 <?php
-require_once 'includes/header.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once 'includes/db.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -24,6 +28,8 @@ if (!$order) {
     header("Location: profile.php");
     exit();
 }
+
+require_once 'includes/header.php';
 
 // Fetch order items
 $stmt = $pdo->prepare("
