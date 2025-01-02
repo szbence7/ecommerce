@@ -164,7 +164,7 @@ if (isset($order)) {
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h3 mb-2">Order #<?= htmlspecialchars($order['id']) ?></h1>
+                    <h1 class="h3 mb-2">Order #<?= htmlspecialchars($order['order_number']) ?></h1>
                     <p class="text-muted mb-0">Placed on <?= date('F j, Y', strtotime($order['created_at'])) ?></p>
                 </div>
                 <span class="order-status status-<?= strtolower($order['status']) ?>">
@@ -186,10 +186,13 @@ if (isset($order)) {
                     // Check if payment is completed or if it's cash on delivery
                     $paymentCompleted = $order['payment_status'] === 'paid';
                     $isCOD = $order['payment_method'] === 'cash_on_delivery';
+                    $isCardPaid = $order['payment_method'] !== 'cash_on_delivery' && $paymentCompleted;
                     
                     // Set current step based on order status and payment completion
                     if (!$paymentCompleted && !$isCOD) {
                         $currentStep = 0; // Only "Ordered" step is completed
+                    } elseif ($isCardPaid) {
+                        $currentStep = array_search('Processing', $steps); // Mark "Payment" and "Processing" as complete for card payments
                     } else {
                         $currentStep = array_search(ucfirst($order['status']), $steps);
                     }
