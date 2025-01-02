@@ -122,12 +122,7 @@ function getOrderStatusBadgeClass($status) {
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="text" id="searchInput" class="form-control" placeholder="<?php echo getTranslation('admin.orders.search.placeholder', $language, $pdo); ?>">
-                                <button class="btn btn-outline-secondary" type="button" onclick="searchOrders()">
-                                    <?php echo getTranslation('admin.orders.search.button', $language, $pdo); ?>
-                                </button>
-                            </div>
+                            <input type="text" id="searchInput" class="form-control" placeholder="<?php echo getTranslation('admin.orders.search.placeholder', $language, $pdo); ?>">
                         </div>
                     </div>
                 </div>
@@ -160,8 +155,7 @@ function getOrderStatusBadgeClass($status) {
                                 <td><?php echo getTranslation('admin.orders.shipping.' . $order['shipping_method'], $language, $pdo); ?></td>
                                 <td><?php echo getTranslation('admin.orders.payment.' . $order['payment_method'], $language, $pdo); ?></td>
                                 <td><span class="badge <?php echo getPaymentStatusBadgeClass($order['payment_status']); ?>">
-                                    <?php echo getTranslation('admin.orders.payment_status.' . $order['payment_status'], $language, $pdo); ?>
-                                </span></td>
+                                    <?php echo getTranslation('admin.orders.payment_status.' . $order['payment_status'], $language, $pdo); ?></span></td>
                                 <td>
                                     <form method="POST" class="d-inline">
                                         <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
@@ -255,19 +249,73 @@ function getOrderStatusBadgeClass($status) {
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const rows = document.querySelectorAll('#ordersTableBody tr');
+
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // Filter function
+    const filterRows = debounce(function(searchTerm) {
+        searchTerm = searchTerm.toLowerCase();
+        
+        rows.forEach(row => {
+            if (searchTerm.length < 3) {
+                row.style.display = '';
+                return;
+            }
+
+            const orderNumber = row.cells[0].textContent.toLowerCase();
+            const customerInfo = row.cells[1].textContent.toLowerCase();
+            const shippingMethod = row.cells[2].textContent.toLowerCase();
+            const paymentMethod = row.cells[3].textContent.toLowerCase();
+
+            if (orderNumber.includes(searchTerm) || 
+                customerInfo.includes(searchTerm) || 
+                shippingMethod.includes(searchTerm) || 
+                paymentMethod.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Check if any rows are visible
+        const visibleRows = document.querySelectorAll('#ordersTableBody tr[style="display: ;"], #ordersTableBody tr:not([style])');
+        if (visibleRows.length === 0 && searchTerm.length >= 3) {
+            const tbody = document.getElementById('ordersTableBody');
+            const noResultsRow = document.createElement('tr');
+            noResultsRow.id = 'noResults';
+            noResultsRow.innerHTML = '<td colspan="9" class="text-center">No orders found</td>';
+            tbody.appendChild(noResultsRow);
+        } else {
+            const noResultsRow = document.getElementById('noResults');
+            if (noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+    }, 300);
+
+    // Add event listener
+    searchInput.addEventListener('input', function(e) {
+        filterRows(this.value.trim());
+    });
+});
+
 function viewOrderDetails(orderId) {
-    // Load order details via AJAX
     fetch(`get_order_details.php?id=${orderId}`)
         .then(response => response.text())
         .then(html => {
             document.getElementById('orderDetailsContent').innerHTML = html;
             new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
         });
-}
-
-function searchOrders() {
-    const searchTerm = document.getElementById('searchInput').value;
-    // Implement search functionality
 }
 </script>
 
