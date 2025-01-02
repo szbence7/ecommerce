@@ -33,17 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset(
     exit();
 }
 
-// Get current page from URL parameter
-$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$orders_per_page = 10;
-$offset = ($current_page - 1) * $orders_per_page;
-
-// Get total number of orders for pagination
-$total_orders_stmt = $pdo->query("SELECT COUNT(*) FROM orders");
-$total_orders = $total_orders_stmt->fetchColumn();
-$total_pages = ceil($total_orders / $orders_per_page);
-
-// Get all orders with payment and shipping details
+// Get all orders without pagination
 $stmt = $pdo->prepare("
     SELECT o.*, 
            CONCAT(o.firstname, ' ', o.lastname) as customer_name,
@@ -72,10 +62,16 @@ $stmt = $pdo->prepare("
            END as total_amount
     FROM orders o 
     ORDER BY o.created_at DESC
-    LIMIT ? OFFSET ?
 ");
-$stmt->execute([$orders_per_page, $offset]);
+$stmt->execute();
 $orders = $stmt->fetchAll();
+
+$orders_per_page = 10;
+$total_orders = count($orders);
+$total_pages = ceil($total_orders / $orders_per_page);
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($current_page < 1) $current_page = 1;
+if ($current_page > $total_pages) $current_page = $total_pages;
 
 // Helper function to get payment status badge class
 function getPaymentStatusBadgeClass($status) {
@@ -182,53 +178,10 @@ function getOrderStatusBadgeClass($status) {
             </div>
 
             <!-- Pagination -->
-            <?php if ($total_pages > 1): ?>
             <nav aria-label="Orders pagination" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <?php if ($current_page > 1): ?>
-                        <li class="page-item">
-                            <a class="page-link" href="?page=<?php echo $current_page - 1; ?>" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
-
-                    <?php
-                    // Show up to 5 pages around current page
-                    $start_page = max(1, $current_page - 2);
-                    $end_page = min($total_pages, $current_page + 2);
-
-                    if ($start_page > 1) {
-                        echo '<li class="page-item"><a class="page-link" href="?page=1">1</a></li>';
-                        if ($start_page > 2) {
-                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                        }
-                    }
-
-                    for ($i = $start_page; $i <= $end_page; $i++) {
-                        echo '<li class="page-item ' . ($i == $current_page ? 'active' : '') . '">';
-                        echo '<a class="page-link" href="?page=' . $i . '">' . $i . '</a>';
-                        echo '</li>';
-                    }
-
-                    if ($end_page < $total_pages) {
-                        if ($end_page < $total_pages - 1) {
-                            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                        }
-                        echo '<li class="page-item"><a class="page-link" href="?page=' . $total_pages . '">' . $total_pages . '</a></li>';
-                    }
-                    ?>
-
-                    <?php if ($current_page < $total_pages): ?>
-                        <li class="page-item">
-                            <a class="page-link" href="?page=<?php echo $current_page + 1; ?>" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
+                <ul class="pagination justify-content-center" id="pagination">
                 </ul>
             </nav>
-            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -252,6 +205,9 @@ function getOrderStatusBadgeClass($status) {
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const rows = document.querySelectorAll('#ordersTableBody tr');
+    const itemsPerPage = <?php echo $orders_per_page; ?>;
+    let currentPage = 1;
+    let filteredRows = Array.from(rows);
 
     // Debounce function
     function debounce(func, wait) {
@@ -262,34 +218,89 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
+    // Update pagination
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        // Previous button
+        if (totalPages > 1) {
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" ${currentPage === 1 ? 'tabindex="-1"' : ''}>«</a>`;
+            if (currentPage !== 1) {
+                prevLi.onclick = () => {
+                    currentPage--;
+                    updateDisplay();
+                };
+            }
+            pagination.appendChild(prevLi);
+        }
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+            li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+            li.onclick = () => {
+                currentPage = i;
+                updateDisplay();
+            };
+            pagination.appendChild(li);
+        }
+
+        // Next button
+        if (totalPages > 1) {
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" ${currentPage === totalPages ? 'tabindex="-1"' : ''}>»</a>`;
+            if (currentPage !== totalPages) {
+                nextLi.onclick = () => {
+                    currentPage++;
+                    updateDisplay();
+                };
+            }
+            pagination.appendChild(nextLi);
+        }
+    }
+
+    // Update display
+    function updateDisplay() {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        
+        rows.forEach(row => row.style.display = 'none');
+        filteredRows.slice(start, end).forEach(row => row.style.display = '');
+        
+        updatePagination();
+    }
+
     // Filter function
     const filterRows = debounce(function(searchTerm) {
         searchTerm = searchTerm.toLowerCase();
         
-        rows.forEach(row => {
-            if (searchTerm.length < 3) {
-                row.style.display = '';
-                return;
-            }
+        if (searchTerm.length < 3) {
+            filteredRows = Array.from(rows);
+        } else {
+            filteredRows = Array.from(rows).filter(row => {
+                const orderNumber = row.cells[0].textContent.toLowerCase();
+                const customerInfo = row.cells[1].textContent.toLowerCase();
+                const shippingMethod = row.cells[2].textContent.toLowerCase();
+                const paymentMethod = row.cells[3].textContent.toLowerCase();
 
-            const orderNumber = row.cells[0].textContent.toLowerCase();
-            const customerInfo = row.cells[1].textContent.toLowerCase();
-            const shippingMethod = row.cells[2].textContent.toLowerCase();
-            const paymentMethod = row.cells[3].textContent.toLowerCase();
+                return orderNumber.includes(searchTerm) || 
+                       customerInfo.includes(searchTerm) || 
+                       shippingMethod.includes(searchTerm) || 
+                       paymentMethod.includes(searchTerm);
+            });
+        }
 
-            if (orderNumber.includes(searchTerm) || 
-                customerInfo.includes(searchTerm) || 
-                shippingMethod.includes(searchTerm) || 
-                paymentMethod.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        // Check if any rows are visible
-        const visibleRows = document.querySelectorAll('#ordersTableBody tr[style="display: ;"], #ordersTableBody tr:not([style])');
-        if (visibleRows.length === 0 && searchTerm.length >= 3) {
+        // Reset to first page when filtering
+        currentPage = 1;
+        
+        // Show no results message if needed
+        if (filteredRows.length === 0 && searchTerm.length >= 3) {
             const tbody = document.getElementById('ordersTableBody');
             const noResultsRow = document.createElement('tr');
             noResultsRow.id = 'noResults';
@@ -301,12 +312,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 noResultsRow.remove();
             }
         }
+
+        updateDisplay();
     }, 300);
 
     // Add event listener
     searchInput.addEventListener('input', function(e) {
         filterRows(this.value.trim());
     });
+
+    // Initial display
+    updateDisplay();
 });
 
 function viewOrderDetails(orderId) {
