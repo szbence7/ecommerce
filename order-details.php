@@ -51,13 +51,22 @@ $orderDetails = [
     'billing_address' => ''
 ];
 
+// Calculate subtotal from order items
+$subtotal = 0;
+foreach ($orderItems as $item) {
+    $subtotal += $item['quantity'] * $item['price'];
+}
+
+// Calculate shipping cost based on shipping method
+$shipping_cost = ($order['shipping_method'] === 'personal') ? 0 : 5.99;
+
 // Merge with actual order details if they exist
 if (isset($order)) {
     $orderDetails = array_merge($orderDetails, [
-        'subtotal' => $order['total_amount'] ?? 0.00,
-        'shipping_cost' => 0.00, // Add shipping cost from your order if available
-        'tax' => 0.00, // Add tax from your order if available
-        'total' => $order['total_amount'] ?? 0.00,
+        'subtotal' => $subtotal,
+        'shipping_cost' => $shipping_cost,
+        'tax' => 0.00,
+        'total' => $subtotal + $shipping_cost,
         'shipping_address' => sprintf(
             "%s %s\n%s\n%s, %s\n%s",
             $order['firstname'] ?? '',
