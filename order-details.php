@@ -11,17 +11,17 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Get order ID from URL
-$order_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+// Get order number from URL
+$order_number = isset($_GET['id']) ? $_GET['id'] : 0;
 
 // Fetch order details
 $stmt = $pdo->prepare("
     SELECT o.*, u.email, u.name as customer_name
     FROM orders o
     JOIN users u ON o.user_id = u.id
-    WHERE o.id = ? AND o.user_id = ?
+    WHERE o.order_number = ? AND o.user_id = ?
 ");
-$stmt->execute([$order_id, $_SESSION['user_id']]);
+$stmt->execute([$order_number, $_SESSION['user_id']]);
 $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$order) {
@@ -38,7 +38,7 @@ $stmt = $pdo->prepare("
     JOIN products p ON oi.product_id = p.id
     WHERE oi.order_id = ?
 ");
-$stmt->execute([$order_id]);
+$stmt->execute([$order['id']]);
 $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Initialize default values for order details
