@@ -34,6 +34,44 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$order_id]);
 $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Initialize default values for order details
+$orderDetails = [
+    'subtotal' => 0.00,
+    'shipping_cost' => 0.00,
+    'tax' => 0.00,
+    'total' => 0.00,
+    'shipping_address' => '',
+    'billing_address' => ''
+];
+
+// Merge with actual order details if they exist
+if (isset($order)) {
+    $orderDetails = array_merge($orderDetails, [
+        'subtotal' => $order['total_amount'] ?? 0.00,
+        'shipping_cost' => 0.00, // Add shipping cost from your order if available
+        'tax' => 0.00, // Add tax from your order if available
+        'total' => $order['total_amount'] ?? 0.00,
+        'shipping_address' => sprintf(
+            "%s %s\n%s\n%s, %s\n%s",
+            $order['firstname'] ?? '',
+            $order['lastname'] ?? '',
+            $order['street_address'] ?? '',
+            $order['city'] ?? '',
+            $order['postal_code'] ?? '',
+            $order['country'] ?? ''
+        ),
+        'billing_address' => sprintf(
+            "%s %s\n%s\n%s, %s\n%s",
+            $order['firstname'] ?? '',
+            $order['lastname'] ?? '',
+            $order['street_address'] ?? '',
+            $order['city'] ?? '',
+            $order['postal_code'] ?? '',
+            $order['country'] ?? ''
+        )
+    ]);
+}
 ?>
 
 <style>
@@ -143,18 +181,34 @@ $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <h5 class="mb-4">Order Progress</h5>
                 <div class="timeline">
                     <?php
-                    $steps = ['Ordered', 'Processing', 'Shipped', 'Delivered'];
-                    $currentStep = array_search(ucfirst($order['status']), $steps);
+                    $steps = ['Ordered', 'Payment', 'Processing', 'Shipped', 'Delivered'];
+                    
+                    // Check if payment is completed or if it's cash on delivery
+                    $paymentCompleted = $order['payment_status'] === 'paid';
+                    $isCOD = $order['payment_method'] === 'cash_on_delivery';
+                    
+                    // Set current step based on order status and payment completion
+                    if (!$paymentCompleted && !$isCOD) {
+                        $currentStep = 0; // Only "Ordered" step is completed
+                    } else {
+                        $currentStep = array_search(ucfirst($order['status']), $steps);
+                    }
+                    
                     foreach ($steps as $index => $step):
+                        $isActive = ($isCOD && $index <= 1) || (!$isCOD && $index <= $currentStep);
                     ?>
-                    <div class="timeline-step <?= $index <= $currentStep ? 'active' : '' ?>">
+                    <div class="timeline-step <?= $isActive ? 'active' : '' ?>">
                         <div class="step-icon">
                             <i class="bi bi-check"></i>
                         </div>
                         <div class="step-content">
                             <h6 class="mb-1"><?= $step ?></h6>
-                            <?php if ($index <= $currentStep): ?>
-                            <small class="text-muted"><?= date('M j, Y') ?></small>
+                            <?php if ($isActive): ?>
+                                <?php if ($step === 'Payment' && $isCOD): ?>
+                                    <small class="text-muted">Cash on Delivery</small>
+                                <?php else: ?>
+                                    <small class="text-muted"><?= date('M j, Y') ?></small>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -191,21 +245,21 @@ $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="col-md-6 offset-md-6">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal</span>
-                            <span>$<?= number_format($order['subtotal'], 2) ?></span>
+                            <span>$<?= number_format($orderDetails['subtotal'], 2) ?></span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Shipping</span>
-                            <span>$<?= number_format($order['shipping_cost'], 2) ?></span>
+                            <span>$<?= number_format($orderDetails['shipping_cost'], 2) ?></span>
                         </div>
-                        <?php if ($order['tax'] > 0): ?>
+                        <?php if ($orderDetails['tax'] > 0): ?>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tax</span>
-                            <span>$<?= number_format($order['tax'], 2) ?></span>
+                            <span>$<?= number_format($orderDetails['tax'], 2) ?></span>
                         </div>
                         <?php endif; ?>
                         <div class="d-flex justify-content-between fw-bold">
                             <span>Total</span>
-                            <span>$<?= number_format($order['total'], 2) ?></span>
+                            <span>$<?= number_format($orderDetails['total'], 2) ?></span>
                         </div>
                     </div>
                 </div>
@@ -219,7 +273,7 @@ $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="address-card">
                 <h5 class="mb-3">Shipping Address</h5>
                 <address class="mb-0">
-                    <?= nl2br(htmlspecialchars($order['shipping_address'])) ?>
+                    <?= nl2br(htmlspecialchars($orderDetails['shipping_address'])) ?>
                 </address>
             </div>
         </div>
@@ -227,7 +281,7 @@ $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="address-card">
                 <h5 class="mb-3">Billing Address</h5>
                 <address class="mb-0">
-                    <?= nl2br(htmlspecialchars($order['billing_address'])) ?>
+                    <?= nl2br(htmlspecialchars($orderDetails['billing_address'])) ?>
                 </address>
             </div>
         </div>
