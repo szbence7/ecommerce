@@ -25,6 +25,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['user_role'];
             
+            // Store user's address details in session
+            $_SESSION['user_address'] = [
+                'email' => $user['email'],
+                'first_name' => $user['first_name'],
+                'last_name' => $user['last_name'],
+                'street_address' => $user['street_address'],
+                'city' => $user['city'],
+                'country' => $user['country'],
+                'postal_code' => $user['postal_code']
+            ];
+            
             // Redirect immediately without any output
             header('Location: index.php');
             exit();

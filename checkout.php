@@ -6,6 +6,21 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Initialize checkout session if it doesn't exist
+if (!isset($_SESSION['checkout'])) {
+    $_SESSION['checkout'] = [
+        'email' => '',
+        'firstname' => '',
+        'lastname' => '',
+        'street_address' => '',
+        'city' => '',
+        'country' => 'HU',
+        'postal_code' => '',
+        'shipping_method' => 'personal',
+        'payment_method' => 'transfer'
+    ];
+}
+
 if (!defined('INCLUDED_FILES')) {
     define('INCLUDED_FILES', true);
     require 'vendor/autoload.php';
@@ -16,6 +31,18 @@ if (!defined('INCLUDED_FILES')) {
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+// Check if user is logged in and address is in session
+if (isset($_SESSION['user_id']) && isset($_SESSION['user_address'])) {
+    // Pre-populate form fields with user's address from session
+    $_SESSION['checkout']['email'] = $_SESSION['user_address']['email'];
+    $_SESSION['checkout']['firstname'] = $_SESSION['user_address']['first_name'];
+    $_SESSION['checkout']['lastname'] = $_SESSION['user_address']['last_name'];
+    $_SESSION['checkout']['street_address'] = $_SESSION['user_address']['street_address'];
+    $_SESSION['checkout']['city'] = $_SESSION['user_address']['city'];
+    $_SESSION['checkout']['country'] = $_SESSION['user_address']['country'];
+    $_SESSION['checkout']['postal_code'] = $_SESSION['user_address']['postal_code'];
+}
+
 // Handle successful Stripe payment
 if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['payment_intent'])) {
     try {
@@ -24,9 +51,13 @@ if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['pa
         // Verify the payment
         $payment_intent = \Stripe\PaymentIntent::retrieve($_GET['payment_intent']);
         
+        error_log("Verifying PaymentIntent {$payment_intent->id} with status: {$payment_intent->status}");
+        
         if ($payment_intent->status === 'succeeded') {
             // Generate order number
             $orderNumber = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
+            
+            error_log("Generating order number: $orderNumber");
             
             // Start transaction
             $pdo->beginTransaction();
@@ -86,6 +117,10 @@ if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['pa
             // Commit transaction
             $pdo->commit();
             
+            error_log("Order $orderNumber created successfully");
+            error_log("Order ID: $orderId");  
+            error_log("Total amount: " . $payment_intent->amount / 100);
+
             // Store order number and success status in session
             $_SESSION['order_number'] = $orderNumber;
             $_SESSION['order_success'] = true;
@@ -94,16 +129,27 @@ if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['pa
             unset($_SESSION['cart']);
             unset($_SESSION['checkout']);
             
+            error_log("Redirecting to success page for order $orderNumber");
+            
             // Redirect to success page
             header('Location: order-success.php?success=true');
             exit();
+        } else {
+            // Log unexpected payment status
+            error_log("Unexpected payment status for PaymentIntent {$payment_intent->id}: {$payment_intent->status}");
+            throw new Exception("Unexpected payment status: {$payment_intent->status}");
         }
     } catch (Exception $e) {
+        // Log any errors
         error_log("Error processing payment: " . $e->getMessage());
+        
+        // Rollback transaction if started
         if (isset($pdo) && $pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        header('Location: checkout.php?step=3&error=payment');
+        
+        // Redirect to checkout with error
+        header('Location: checkout.php?error=payment');
         exit();
     }
 }
@@ -266,21 +312,6 @@ if (!isset($_GET['success']) && empty($_SESSION['cart'])) {
     exit();
 }
 
-// Initialize checkout session if not exists
-if (!isset($_SESSION['checkout'])) {
-    $_SESSION['checkout'] = [
-        'email' => '',
-        'firstname' => '',
-        'lastname' => '',
-        'street_address' => '',
-        'city' => '',
-        'country' => 'HU',
-        'postal_code' => '',
-        'shipping_method' => 'personal',
-        'payment_method' => 'transfer'
-    ];
-}
-
 // Countries list
 $countries = [
     'HU' => 'Magyarország',
@@ -406,23 +437,23 @@ $final_total = $total + $shipping_cost;
                         <form method="POST" class="shipping-form">
                             <div class="mb-3">
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="shipping_method" id="personal" value="personal" <?php echo $_SESSION['checkout']['shipping_method'] === 'personal' ? 'checked' : ''; ?>>
+                                    <input class="form-check-input" type="radio" name="shipping_method" id="personal" value="personal" <?php echo isset($_SESSION['checkout']['shipping_method']) && $_SESSION['checkout']['shipping_method'] === 'personal' ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="personal">Személyes átvétel</label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="shipping_method" id="gls" value="gls" <?php echo $_SESSION['checkout']['shipping_method'] === 'gls' ? 'checked' : ''; ?>>
+                                    <input class="form-check-input" type="radio" name="shipping_method" id="gls" value="gls" <?php echo isset($_SESSION['checkout']['shipping_method']) && $_SESSION['checkout']['shipping_method'] === 'gls' ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="gls">GLS</label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="shipping_method" id="dpd" value="dpd" <?php echo $_SESSION['checkout']['shipping_method'] === 'dpd' ? 'checked' : ''; ?>>
+                                    <input class="form-check-input" type="radio" name="shipping_method" id="dpd" value="dpd" <?php echo isset($_SESSION['checkout']['shipping_method']) && $_SESSION['checkout']['shipping_method'] === 'dpd' ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="dpd">DPD</label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="shipping_method" id="mpl" value="mpl" <?php echo $_SESSION['checkout']['shipping_method'] === 'mpl' ? 'checked' : ''; ?>>
+                                    <input class="form-check-input" type="radio" name="shipping_method" id="mpl" value="mpl" <?php echo isset($_SESSION['checkout']['shipping_method']) && $_SESSION['checkout']['shipping_method'] === 'mpl' ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="mpl">MPL</label>
                                 </div>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="shipping_method" id="automat" value="automat" <?php echo $_SESSION['checkout']['shipping_method'] === 'automat' ? 'checked' : ''; ?>>
+                                    <input class="form-check-input" type="radio" name="shipping_method" id="automat" value="automat" <?php echo isset($_SESSION['checkout']['shipping_method']) && $_SESSION['checkout']['shipping_method'] === 'automat' ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="automat">Csomagautomata</label>
                                 </div>
                             </div>
@@ -435,7 +466,7 @@ $final_total = $total + $shipping_cost;
                             <div class="mb-3">
                                 <label class="form-label">Válassza ki a fizetési módot:</label>
                                 <div class="form-check">
-                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="card" value="card" <?php echo ($_SESSION['checkout']['payment_method'] == 'card') ? 'checked' : ''; ?>>
+                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="card" value="card" <?php echo (isset($_POST['payment_method']) && $_POST['payment_method'] == 'card') ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="card">
                                         Bankkártya
                                     </label>
@@ -445,13 +476,13 @@ $final_total = $total + $shipping_cost;
                                     </div>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="transfer" value="transfer" <?php echo ($_SESSION['checkout']['payment_method'] == 'transfer') ? 'checked' : ''; ?>>
+                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="transfer" value="transfer" <?php echo (isset($_POST['payment_method']) && $_POST['payment_method'] == 'transfer') ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="transfer">
                                         Banki átutalás
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="cash_on_delivery" value="cash_on_delivery" <?php echo ($_SESSION['checkout']['payment_method'] == 'cash_on_delivery') ? 'checked' : ''; ?>>
+                                    <input class="form-check-input payment-method-radio" type="radio" name="payment_method" id="cash_on_delivery" value="cash_on_delivery" <?php echo (isset($_POST['payment_method']) && $_POST['payment_method'] == 'cash_on_delivery') ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="cash_on_delivery">
                                         Utánvét
                                     </label>
@@ -624,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const {error} = await stripe.confirmPayment({
                     elements,
                     confirmParams: {
-                        return_url: `${window.location.origin}/checkout.php?step=3&payment=success`,
+                        return_url: `${window.location.origin}/checkout.php?payment=success`,
                     }
                 });
 
