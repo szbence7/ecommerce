@@ -121,5 +121,17 @@ function get_product($product_id) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+function updateUserPoints($userId, $orderTotal, $pdo) {
+    // Calculate points (1 point per 50 EUR spent, excluding shipping)
+    $points = floor($orderTotal / 50);
+    
+    if ($points > 0) {
+        $stmt = $pdo->prepare("UPDATE users SET points_balance = points_balance + ? WHERE id = ?");
+        $stmt->execute([$points, $userId]);
+    }
+    
+    return $points;
+}
+
 // Check expired discounts on every page load
 checkExpiredDiscounts($pdo);

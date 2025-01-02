@@ -117,23 +117,22 @@ if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['pa
             // Commit transaction
             $pdo->commit();
             
-            error_log("Order $orderNumber created successfully");
-            error_log("Order ID: $orderId");  
-            error_log("Total amount: " . $payment_intent->amount / 100);
-
+            // Calculate and award points (only for product total, excluding shipping)
+            $points = updateUserPoints($userId, $total, $pdo);
+            
             // Store order number and success status in session
             $_SESSION['order_number'] = $orderNumber;
             $_SESSION['order_success'] = true;
+            $_SESSION['points_earned'] = $points;
             
             // Clear cart and checkout data
             unset($_SESSION['cart']);
             unset($_SESSION['checkout']);
             
-            error_log("Redirecting to success page for order $orderNumber");
-            
             // Redirect to success page
-            header('Location: order-success.php?success=true');
+            header('Location: order-success.php');
             exit();
+            
         } else {
             // Log unexpected payment status
             error_log("Unexpected payment status for PaymentIntent {$payment_intent->id}: {$payment_intent->status}");
@@ -283,9 +282,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Commit transaction
             $pdo->commit();
             
+            // Calculate and award points (only for product total, excluding shipping)
+            $points = updateUserPoints($userId, $total, $pdo);
+            
             // Store order number and success status in session
             $_SESSION['order_number'] = $orderNumber;
             $_SESSION['order_success'] = true;
+            $_SESSION['points_earned'] = $points;
             
             // Clear cart
             unset($_SESSION['cart']);
