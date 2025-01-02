@@ -137,6 +137,20 @@ updateUserSession();
             border-right: 8px solid transparent;
             border-bottom: 8px solid #fff;
         }
+        .points-badge {
+            background-color: #ffd700;
+            color: #000;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            margin-right: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .points-badge i {
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -153,6 +167,16 @@ updateUserSession();
             <div>
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <div class="user-dropdown">
+                        <?php
+                        // Get user's points balance
+                        $stmt = $pdo->prepare("SELECT points_balance FROM users WHERE id = ?");
+                        $stmt->execute([$_SESSION['user_id']]);
+                        $points = $stmt->fetchColumn() ?: 0;
+                        ?>
+                        <span class="points-badge">
+                            <i class="bi bi-star-fill"></i>Pontegyenleg: 
+                            <?= str_replace('{points}', number_format($points), __t('user.points')) ?>
+                        </span>
                         <span class="user-dropdown-trigger me-3">Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
                         <div class="user-dropdown-content">
                             <?php if(isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], [1, 2])): ?>

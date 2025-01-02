@@ -12,7 +12,8 @@
         "bestPractices": [
           "Always use descriptive and self-explanatory variable names.",
           "Implement proper error handling using try-catch blocks.",
-          "Write secure code to prevent SQL injection and other vulnerabilities."
+          "Write secure code to prevent SQL injection and other vulnerabilities.",
+          "When db alteration needed, just give me the sql query and i will import it in the database"
         ]
       },
       {
