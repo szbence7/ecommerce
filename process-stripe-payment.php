@@ -18,64 +18,44 @@ $dotenv->load();
 header('Content-Type: application/json');
 
 try {
-    if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-        throw new Exception('Cart is empty');
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($input['create_payment']) || !isset($input['order_id'])) {
+        throw new Exception('Invalid request data');
     }
 
-    // Calculate total in original currency (HUF)
-    $total = 0;
-    foreach ($_SESSION['cart'] as $product_id => $quantity) {
-        $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
-        $stmt->execute([$product_id]);
-        $product = $stmt->fetch();
-        if (!$product) {
-            throw new Exception("Product not found: " . $product_id);
-        }
-        $total += floatval($product['price']) * intval($quantity);
-    }
+    // Get order details
+    $stmt = $pdo->prepare("SELECT total_amount FROM orders WHERE id = ?");
+    $stmt->execute([$input['order_id']]);
+    $order = $stmt->fetch();
 
-    // Add shipping cost
-    $shipping_costs = [
-        'personal' => 0,
-        'gls' => 5.99,
-        'dpd' => 5.99,
-        'mpl' => 5.99,
-        'automat' => 5.99
-    ];
-    
-    $selected_shipping = $_SESSION['checkout']['shipping_method'] ?? 'personal';
-    $shipping_cost = floatval($shipping_costs[$selected_shipping] ?? 0);
-    
-    // Calculate final total in original currency
-    $final_total = $total + $shipping_cost;
-    
-    // Convert to GBP
-    $rate = getExchangeRate('GBP');
-    $gbp_amount = $final_total * $rate;
-    
-    // Convert to pence for Stripe
-    $stripe_amount = (int)round($gbp_amount * 100);
-    
-    error_log("Original amount: " . $final_total);
-    error_log("GBP amount: £" . number_format($gbp_amount, 2));
-    error_log("Stripe amount (pence): " . $stripe_amount);
+    if (!$order) {
+        throw new Exception('Order not found');
+    }
 
     // Create PaymentIntent
     $payment_intent = \Stripe\PaymentIntent::create([
-        'amount' => $stripe_amount,
-        'currency' => 'gbp',
+        'amount' => round($order['total_amount'] * 100), // Convert to cents
+        'currency' => 'eur',
         'automatic_payment_methods' => [
             'enabled' => true,
+        ],
+        'metadata' => [
+            'order_id' => $input['order_id']
         ]
     ]);
 
-    $output = [
-        'clientSecret' => $payment_intent->client_secret
-    ];
+    // Update order with payment intent ID
+    $stmt = $pdo->prepare("UPDATE orders SET stripe_payment_intent = ? WHERE id = ?");
+    $stmt->execute([$payment_intent->id, $input['order_id']]);
 
-    echo json_encode($output);
+    echo json_encode([
+        'clientSecret' => $payment_intent->client_secret
+    ]);
+
 } catch (Exception $e) {
-    error_log("Error: " . $e->getMessage());
-    http_response_code(400);
-    echo json_encode(['error' => $e->getMessage()]);
+    http_response_code(500);
+    echo json_encode([
+        'error' => $e->getMessage()
+    ]);
 } 

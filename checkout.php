@@ -31,282 +31,41 @@ if (!defined('INCLUDED_FILES')) {
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-// Check if user is logged in and address is in session
-if (isset($_SESSION['user_id']) && isset($_SESSION['user_address'])) {
-    // Pre-populate form fields with user's address from session
-    $_SESSION['checkout']['email'] = $_SESSION['user_address']['email'];
-    $_SESSION['checkout']['firstname'] = $_SESSION['user_address']['first_name'];
-    $_SESSION['checkout']['lastname'] = $_SESSION['user_address']['last_name'];
-    $_SESSION['checkout']['street_address'] = $_SESSION['user_address']['street_address'];
-    $_SESSION['checkout']['city'] = $_SESSION['user_address']['city'];
-    $_SESSION['checkout']['country'] = $_SESSION['user_address']['country'];
-    $_SESSION['checkout']['postal_code'] = $_SESSION['user_address']['postal_code'];
-}
-
 // Handle successful Stripe payment
-if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['payment_intent'])) {
+if (isset($_GET['payment']) && $_GET['payment'] === 'success' && isset($_GET['order_id'])) {
     try {
         \Stripe\Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
         
-        // Verify the payment
-        $payment_intent = \Stripe\PaymentIntent::retrieve($_GET['payment_intent']);
+        // Get the payment intent from the URL
+        $payment_intent = null;
+        if (isset($_GET['payment_intent'])) {
+            $payment_intent = \Stripe\PaymentIntent::retrieve($_GET['payment_intent']);
+        }
         
-        error_log("Verifying PaymentIntent {$payment_intent->id} with status: {$payment_intent->status}");
-        
-        if ($payment_intent->status === 'succeeded') {
-            // Generate order number
-            $orderNumber = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
-            
-            error_log("Generating order number: $orderNumber");
-            
-            // Start transaction
-            $pdo->beginTransaction();
-            
-            // Insert order
-            $stmt = $pdo->prepare("
-                INSERT INTO orders (
-                    order_number, user_id, status, total_amount, payment_method, 
-                    payment_status, shipping_method, email, firstname, lastname,
-                    street_address, city, country, postal_code
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
-            if (!$userId) {
-                throw new Exception('User must be logged in to place an order');
-            }
-            
-            $stmt->execute([
-                $orderNumber,
-                $userId,
-                'processing',
-                $payment_intent->amount / 100, // Convert back from pence
-                'card',
-                'paid',
-                $_SESSION['checkout']['shipping_method'],
-                $_SESSION['checkout']['email'],
-                $_SESSION['checkout']['firstname'],
-                $_SESSION['checkout']['lastname'],
-                $_SESSION['checkout']['street_address'],
-                $_SESSION['checkout']['city'],
-                $_SESSION['checkout']['country'],
-                $_SESSION['checkout']['postal_code']
-            ]);
-            
-            $orderId = $pdo->lastInsertId();
-            
-            // Insert order items and calculate total for points
-            $stmt = $pdo->prepare("
-                INSERT INTO order_items (order_id, product_id, quantity, price)
-                VALUES (?, ?, ?, ?)
-            ");
-            
-            // Calculate total for points (excluding shipping)
-            $total = 0;
-            foreach ($_SESSION['cart'] as $product_id => $quantity) {
-                $priceStmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
-                $priceStmt->execute([$product_id]);
-                $product = $priceStmt->fetch();
-                $total += $product['price'] * $quantity;
-                
-                $stmt->execute([
-                    $orderId,
-                    $product_id,
-                    $quantity,
-                    $product['price']
-                ]);
-            }
-            
-            // Commit transaction
-            $pdo->commit();
-            
-            // Calculate and award points (only for product total, excluding shipping)
-            $points = updateUserPoints($userId, $total, $pdo);
-            
-            // Store order number and success status in session
-            $_SESSION['order_number'] = $orderNumber;
-            $_SESSION['order_success'] = true;
-            $_SESSION['points_earned'] = $points;
+        if ($payment_intent && $payment_intent->status === 'succeeded') {
+            // Update order status
+            $stmt = $pdo->prepare("UPDATE orders SET status = 'processing', payment_status = 'paid' WHERE id = ? AND payment_status = 'pending'");
+            $stmt->execute([$_GET['order_id']]);
             
             // Clear cart and checkout data
             unset($_SESSION['cart']);
             unset($_SESSION['checkout']);
+            unset($_SESSION['points_to_redeem']);
+            
+            // Store success message
+            $_SESSION['order_success'] = true;
+            
+            // Get order number
+            $stmt = $pdo->prepare("SELECT order_number FROM orders WHERE id = ?");
+            $stmt->execute([$_GET['order_id']]);
+            $_SESSION['order_number'] = $stmt->fetchColumn();
             
             // Redirect to success page
             header('Location: order-success.php');
             exit();
-        } else {
-            // Log unexpected payment status
-            error_log("Unexpected payment status for PaymentIntent {$payment_intent->id}: {$payment_intent->status}");
-            throw new Exception("Unexpected payment status: {$payment_intent->status}");
         }
     } catch (Exception $e) {
-        // Log any errors
-        error_log("Error processing payment: " . $e->getMessage());
-        
-        // Rollback transaction if started
-        if (isset($pdo) && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        
-        // Redirect to checkout with error
-        header('Location: checkout.php?error=payment');
-        exit();
-    }
-}
-
-$currentCurrency = getShopCurrency();
-$rate = getExchangeRate($currentCurrency);
-
-// Initialize step if not set
-$current_step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
-
-// Process form submission BEFORE any output
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['next_step'])) {
-        // Save form data based on current step
-        if (!isset($_SESSION['checkout'])) {
-            $_SESSION['checkout'] = [
-                'email' => '',
-                'firstname' => '',
-                'lastname' => '',
-                'street_address' => '',
-                'city' => '',
-                'country' => 'HU',
-                'postal_code' => '',
-                'shipping_method' => 'personal',
-                'payment_method' => 'transfer'
-            ];
-        }
-        
-        if ($current_step == 1) {
-            $_SESSION['checkout']['email'] = $_POST['email'];
-            $_SESSION['checkout']['firstname'] = $_POST['firstname'];
-            $_SESSION['checkout']['lastname'] = $_POST['lastname'];
-            $_SESSION['checkout']['street_address'] = $_POST['street_address'];
-            $_SESSION['checkout']['city'] = $_POST['city'];
-            $_SESSION['checkout']['country'] = $_POST['country'];
-            $_SESSION['checkout']['postal_code'] = $_POST['postal_code'];
-            
-            header("Location: checkout.php?step=2");
-            exit();
-        } elseif ($current_step == 2) {
-            $_SESSION['checkout']['shipping_method'] = $_POST['shipping_method'];
-            
-            header("Location: checkout.php?step=3");
-            exit();
-        }
-    } elseif (isset($_POST['complete_order'])) {
-        $_SESSION['checkout']['payment_method'] = $_POST['payment_method'];
-        
-        // Generate order number
-        $orderNumber = 'ORD-' . date('Ymd') . '-' . rand(1000, 9999);
-        
-        // Determine payment status based on payment method
-        $paymentStatus = 'pending_payment'; // default
-        switch ($_POST['payment_method']) {
-            case 'card':
-                $paymentStatus = 'paid';
-                break;
-            case 'transfer':
-                $paymentStatus = 'pending_payment';
-                break;
-            case 'cash_on_delivery':
-                $paymentStatus = 'cash_on_delivery';
-                break;
-        }
-        
-        try {
-            // Start transaction
-            $pdo->beginTransaction();
-            
-            // Calculate total
-            $total = 0;
-            foreach ($_SESSION['cart'] as $product_id => $quantity) {
-                $stmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
-                $stmt->execute([$product_id]);
-                $product = $stmt->fetch();
-                $total += $product['price'] * $quantity;
-            }
-            
-            // Insert order
-            $stmt = $pdo->prepare("
-                INSERT INTO orders (
-                    order_number, user_id, status, total_amount, payment_method, 
-                    payment_status, shipping_method, email, firstname, lastname,
-                    street_address, city, country, postal_code
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
-            if (!$userId) {
-                throw new Exception('User must be logged in to place an order');
-            }
-            
-            $stmt->execute([
-                $orderNumber,
-                $userId,
-                'processing',
-                $total,
-                $_POST['payment_method'],
-                $paymentStatus,
-                $_SESSION['checkout']['shipping_method'],
-                $_SESSION['checkout']['email'],
-                $_SESSION['checkout']['firstname'],
-                $_SESSION['checkout']['lastname'],
-                $_SESSION['checkout']['street_address'],
-                $_SESSION['checkout']['city'],
-                $_SESSION['checkout']['country'],
-                $_SESSION['checkout']['postal_code']
-            ]);
-            
-            $orderId = $pdo->lastInsertId();
-            
-            // Insert order items
-            $stmt = $pdo->prepare("
-                INSERT INTO order_items (order_id, product_id, quantity, price)
-                VALUES (?, ?, ?, ?)
-            ");
-            
-            foreach ($_SESSION['cart'] as $product_id => $quantity) {
-                $priceStmt = $pdo->prepare("SELECT price FROM products WHERE id = ?");
-                $priceStmt->execute([$product_id]);
-                $product = $priceStmt->fetch();
-                
-                $stmt->execute([
-                    $orderId,
-                    $product_id,
-                    $quantity,
-                    $product['price']
-                ]);
-            }
-            
-            // Commit transaction
-            $pdo->commit();
-            
-            // Calculate and award points (only for product total, excluding shipping)
-            $points = updateUserPoints($userId, $total, $pdo);
-            
-            // Store order number and success status in session
-            $_SESSION['order_number'] = $orderNumber;
-            $_SESSION['order_success'] = true;
-            $_SESSION['points_earned'] = $points;
-            
-            // Clear cart
-            unset($_SESSION['cart']);
-            unset($_SESSION['checkout']);
-            
-            // Redirect to success page
-            header('Location: order-success.php');
-            exit();
-            
-        } catch (Exception $e) {
-            // Rollback transaction on error
-            $pdo->rollBack();
-            error_log("Order creation failed: " . $e->getMessage());
-            header('Location: checkout.php?error=1');
-            exit();
-        }
+        error_log("Error processing payment success: " . $e->getMessage());
     }
 }
 
@@ -334,6 +93,45 @@ $countries = [
 
 // Add this before include 'includes/header.php';
 $stripePublicKey = $_ENV['STRIPE_PUBLIC_KEY'];
+
+// Initialize step if not set
+$current_step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
+
+// Process form submission BEFORE any output
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['next_step'])) {
+        // Save form data based on current step
+        if ($current_step == 1) {
+            $_SESSION['checkout']['email'] = $_POST['email'];
+            $_SESSION['checkout']['firstname'] = $_POST['firstname'];
+            $_SESSION['checkout']['lastname'] = $_POST['lastname'];
+            $_SESSION['checkout']['street_address'] = $_POST['street_address'];
+            $_SESSION['checkout']['city'] = $_POST['city'];
+            $_SESSION['checkout']['country'] = $_POST['country'];
+            $_SESSION['checkout']['postal_code'] = $_POST['postal_code'];
+            
+            header("Location: checkout.php?step=2");
+            exit();
+        } elseif ($current_step == 2) {
+            $_SESSION['checkout']['shipping_method'] = $_POST['shipping_method'];
+            
+            header("Location: checkout.php?step=3");
+            exit();
+        }
+    }
+}
+
+// Check if user is logged in and address is in session
+if (isset($_SESSION['user_id']) && isset($_SESSION['user_address'])) {
+    // Pre-populate form fields with user's address from session
+    $_SESSION['checkout']['email'] = $_SESSION['user_address']['email'];
+    $_SESSION['checkout']['firstname'] = $_SESSION['user_address']['first_name'];
+    $_SESSION['checkout']['lastname'] = $_SESSION['user_address']['last_name'];
+    $_SESSION['checkout']['street_address'] = $_SESSION['user_address']['street_address'];
+    $_SESSION['checkout']['city'] = $_SESSION['user_address']['city'];
+    $_SESSION['checkout']['country'] = $_SESSION['user_address']['country'];
+    $_SESSION['checkout']['postal_code'] = $_SESSION['user_address']['postal_code'];
+}
 
 include 'includes/header.php';
 
@@ -493,7 +291,30 @@ $final_total = $total + $shipping_cost;
                                     </label>
                                 </div>
                             </div>
-                            <button type="submit" id="submit-button" name="complete_order" class="btn btn-primary">Rendelés véglegesítése</button>
+
+                            <?php if(isset($_SESSION['user_id'])): ?>
+                                <?php
+                                    // Get user's points balance
+                                    $stmt = $pdo->prepare("SELECT points_balance FROM users WHERE id = ?");
+                                    $stmt->execute([$_SESSION['user_id']]);
+                                    $available_points = $stmt->fetchColumn() ?: 0;
+                                ?>
+                                <div class="points-redemption mt-4">
+                                    <h4>Pontbeváltás</h4>
+                                    <p>Elérhető pontok: <strong><?php echo number_format($available_points); ?></strong></p>
+                                    <div class="input-group mb-3">
+                                        <input type="number" class="form-control" id="points_to_redeem" 
+                                               name="points_to_redeem" min="0" max="<?php echo $available_points; ?>" 
+                                               value="0" placeholder="Beváltandó pontok">
+                                        <button class="btn btn-outline-primary" type="button" id="apply_points">
+                                            Pontok beváltása
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">1 pont = 1 EUR értékű kedvezmény</small>
+                                </div>
+                            <?php endif; ?>
+
+                            <button type="submit" id="submit-button" name="complete_order" class="btn btn-primary mt-3">Rendelés véglegesítése</button>
                         </form>
                     <?php endif; ?>
                 </div>
@@ -523,10 +344,18 @@ $final_total = $total + $shipping_cost;
                             </div>
                         <?php endif; ?>
                         
+                        <div id="points-discount-row" style="display: none;">
+                            <hr>
+                            <div class="d-flex justify-content-between points-discount">
+                                <span>Beváltott pont:</span>
+                                <span class="points-discount-amount">-<?php echo formatPrice(0); ?></span>
+                            </div>
+                        </div>
+                        
                         <hr>
                         <div class="d-flex justify-content-between">
                             <strong>Teljes fizetendő:</strong>
-                            <strong class="final-total"><?php echo formatPrice($final_total); ?></strong>
+                            <strong class="final-total" data-original="<?php echo $final_total; ?>"><?php echo formatPrice($final_total); ?></strong>
                         </div>
                     </div>
                 </div>
@@ -569,6 +398,86 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Points redemption functionality
+    const pointsInput = document.getElementById('points_to_redeem');
+    const applyPointsBtn = document.getElementById('apply_points');
+    const pointsDiscountRow = document.getElementById('points-discount-row');
+    const finalTotalElement = document.querySelector('.final-total');
+    
+    if (applyPointsBtn && pointsInput) {
+        applyPointsBtn.addEventListener('click', function() {
+            const points = parseInt(pointsInput.value) || 0;
+            const originalTotal = parseFloat(finalTotalElement.getAttribute('data-original'));
+            
+            if (points > 0) {
+                // Show the points discount row
+                pointsDiscountRow.style.display = 'block';
+                
+                // Calculate new total (1 point = 1 EUR)
+                const discount = points;
+                const newTotal = Math.max(0, originalTotal - discount);
+                
+                // Update the points discount amount display
+                fetch(`format_price.php?price=${discount}`)
+                    .then(response => response.text())
+                    .then(formattedDiscount => {
+                        document.querySelector('.points-discount-amount').textContent = '-' + formattedDiscount;
+                    });
+                
+                // Update the final total
+                fetch(`format_price.php?price=${newTotal}`)
+                    .then(response => response.text())
+                    .then(formattedTotal => {
+                        finalTotalElement.textContent = formattedTotal;
+                    });
+
+                // Save points to session
+                fetch('save_points.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        points_to_redeem: points
+                    })
+                });
+            } else {
+                // Hide the points discount row if no points are being used
+                pointsDiscountRow.style.display = 'none';
+                
+                // Reset to original total
+                fetch(`format_price.php?price=${originalTotal}`)
+                    .then(response => response.text())
+                    .then(formattedTotal => {
+                        finalTotalElement.textContent = formattedTotal;
+                    });
+
+                // Clear points from session
+                fetch('save_points.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        points_to_redeem: 0
+                    })
+                });
+            }
+        });
+        
+        // Add input validation
+        pointsInput.addEventListener('input', function() {
+            const maxPoints = parseInt(this.max);
+            let value = parseInt(this.value) || 0;
+            
+            if (value < 0) {
+                this.value = 0;
+            } else if (value > maxPoints) {
+                this.value = maxPoints;
+            }
+        });
+    }
 });
 </script>
 
@@ -576,8 +485,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://js.stripe.com/v3/"></script>
 <script>
 const stripe = Stripe('<?php echo $stripePublicKey; ?>');
-let elements;
-let paymentElement;
+let elements = null;
+let paymentElement = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     const paymentForm = document.getElementById('payment-form');
@@ -585,6 +494,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const paymentMethodRadios = document.querySelectorAll('.payment-method-radio');
     const cardElementContainer = document.getElementById('card-element-container');
     const messageDiv = document.getElementById('payment-message');
+
+    async function initializePaymentElement() {
+        try {
+            // Create empty Elements instance
+            elements = stripe.elements({
+                mode: 'payment',
+                amount: <?php echo ($final_total * 100); ?>,
+                currency: 'eur',
+                appearance: {
+                    theme: 'stripe'
+                }
+            });
+
+            // Create and mount the Payment Element
+            paymentElement = elements.create('payment');
+            await paymentElement.mount('#payment-element');
+            messageDiv.classList.add('hidden');
+        } catch (error) {
+            console.error('Error initializing payment element:', error);
+            messageDiv.textContent = error.message;
+            messageDiv.style.color = 'red';
+            messageDiv.classList.remove('hidden');
+        }
+    }
 
     async function handlePaymentMethodChange() {
         const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
@@ -594,47 +527,30 @@ document.addEventListener('DOMContentLoaded', function() {
             messageDiv.classList.remove('hidden');
             messageDiv.textContent = 'Loading payment form...';
             
-            if (!elements) {
-                try {
-                    const response = await fetch('process-stripe-payment.php', {
-                        method: 'POST'
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    
-                    const data = await response.json();
-                    console.log('Payment initialization response:', data);
-                    
-                    if (data.error) {
-                        throw new Error(data.error);
-                    }
-
-                    elements = stripe.elements({
-                        clientSecret: data.clientSecret,
-                        appearance: {
-                            theme: 'stripe'
-                        }
-                    });
-                    
-                    paymentElement = elements.create('payment');
-                    await paymentElement.mount('#payment-element');
-                    messageDiv.classList.add('hidden');
-                } catch (error) {
-                    console.error('Error:', error);
-                    messageDiv.textContent = error.message;
-                    messageDiv.style.color = 'red';
-                }
+            try {
+                await initializePaymentElement();
+                messageDiv.classList.add('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                messageDiv.textContent = error.message;
+                messageDiv.style.color = 'red';
             }
         } else {
             cardElementContainer.style.display = 'none';
             messageDiv.classList.add('hidden');
+            if (elements) {
+                elements = null;
+                paymentElement = null;
+                const paymentElementContainer = document.getElementById('payment-element');
+                paymentElementContainer.innerHTML = '';
+            }
         }
     }
 
     // Initialize payment method display
-    handlePaymentMethodChange();
+    if (document.querySelector('input[name="payment_method"]:checked')) {
+        handlePaymentMethodChange();
+    }
 
     // Add change event listeners to radio buttons
     paymentMethodRadios.forEach(radio => {
@@ -653,20 +569,65 @@ document.addEventListener('DOMContentLoaded', function() {
             messageDiv.style.color = 'rgb(105, 115, 134)';
             
             try {
-                if (!elements) {
-                    throw new Error('Payment form not initialized');
+                // Submit the form data to Stripe first
+                const { error: submitError } = await elements.submit();
+                if (submitError) {
+                    throw submitError;
                 }
 
-                const {error} = await stripe.confirmPayment({
+                // First save the order details
+                const formData = new FormData(paymentForm);
+                formData.append('payment_method', 'card');
+                formData.append('complete_order', 'true');
+                formData.append('shipping_method', document.querySelector('input[name="shipping_method"]:checked')?.value || 'personal');
+                
+                const saveOrderResponse = await fetch('save-order.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!saveOrderResponse.ok) {
+                    const errorData = await saveOrderResponse.json();
+                    throw new Error(errorData.error || 'Failed to save order');
+                }
+
+                const orderData = await saveOrderResponse.json();
+                
+                // Create PaymentIntent
+                const createResponse = await fetch('process-stripe-payment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        create_payment: true,
+                        order_id: orderData.order_id,
+                        points_to_redeem: document.getElementById('points_to_redeem')?.value || 0
+                    })
+                });
+
+                if (!createResponse.ok) {
+                    throw new Error('Failed to create payment');
+                }
+
+                const { clientSecret } = await createResponse.json();
+
+                // Confirm the payment
+                const { error } = await stripe.confirmPayment({
+                    clientSecret: clientSecret,
                     elements,
                     confirmParams: {
-                        return_url: `${window.location.origin}/checkout.php?payment=success`,
+                        return_url: window.location.origin + '/checkout.php?payment=success&order_id=' + orderData.order_id
                     }
                 });
 
                 if (error) {
+                    messageDiv.textContent = error.message;
+                    messageDiv.style.color = 'red';
+                    submitButton.disabled = false;
                     throw error;
                 }
+
             } catch (error) {
                 console.error('Payment Error:', error);
                 messageDiv.textContent = error.message;
