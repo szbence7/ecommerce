@@ -118,6 +118,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: checkout.php?step=3");
             exit();
         }
+    } elseif (isset($_POST['complete_order'])) {
+        // Handle non-card payment methods
+        $payment_method = $_POST['payment_method'] ?? '';
+        
+        if ($payment_method === 'transfer' || $payment_method === 'cash_on_delivery') {
+            try {
+                // Save order details using POST
+                $postData = [
+                    'payment_method' => $payment_method,
+                    'shipping_method' => $_SESSION['checkout']['shipping_method'],
+                    'points_to_redeem' => $_POST['points_to_redeem'] ?? 0
+                ];
+                
+                $ch = curl_init('save-order.php');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+                
+                $saveOrderResponse = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($httpCode !== 200) {
+                    throw new Exception('Failed to save order');
+                }
+
+                $orderData = json_decode($saveOrderResponse, true);
+                if (!$orderData['success']) {
+                    throw new Exception($orderData['error'] ?? 'Failed to save order');
+                }
+
+                // Store success message and order number
+                $_SESSION['order_success'] = true;
+                $_SESSION['order_number'] = $orderData['order_number'];
+
+                // Clear cart and checkout data
+                unset($_SESSION['cart']);
+                unset($_SESSION['checkout']);
+                unset($_SESSION['points_to_redeem']);
+
+                // Redirect to success page
+                header('Location: order-success.php');
+                exit();
+
+            } catch (Exception $e) {
+                error_log("Order processing error: " . $e->getMessage());
+                header('Location: checkout.php?step=3&error=' . urlencode($e->getMessage()));
+                exit();
+            }
+        }
     }
 }
 

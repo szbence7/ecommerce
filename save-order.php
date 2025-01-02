@@ -31,9 +31,30 @@ try {
         throw new Exception('Shipping method is required');
     }
 
-    // Log incoming data for debugging
-    error_log('POST data: ' . print_r($_POST, true));
-    error_log('Session checkout data: ' . print_r($_SESSION['checkout'], true));
+    if (!isset($_POST['payment_method'])) {
+        throw new Exception('Payment method is required');
+    }
+
+    // Determine payment status based on payment method
+    $payment_status = 'pending_payment'; // default
+    $order_status = 'pending';
+    
+    switch ($_POST['payment_method']) {
+        case 'card':
+            $payment_status = 'pending';
+            $order_status = 'pending';
+            break;
+        case 'transfer':
+            $payment_status = 'pending_payment';
+            $order_status = 'pending';
+            break;
+        case 'cash_on_delivery':
+            $payment_status = 'cash_on_delivery';
+            $order_status = 'processing';
+            break;
+        default:
+            throw new Exception('Invalid payment method');
+    }
 
     // Calculate total
     $total = 0;
@@ -102,10 +123,10 @@ try {
         $stmt->execute([
             $orderNumber,
             $_SESSION['user_id'],
-            'pending',
+            $order_status,
             $final_total,
-            'card',
-            'pending',
+            $_POST['payment_method'],
+            $payment_status,
             $selected_shipping,
             $_SESSION['checkout']['email'],
             $_SESSION['checkout']['firstname'],
@@ -140,6 +161,11 @@ try {
                 $quantity,
                 $product['price']
             ]);
+        }
+        
+        // Calculate and award points for the purchase
+        if ($_POST['payment_method'] !== 'card') { // Only award points for non-card payments immediately
+            $points = updateUserPoints($_SESSION['user_id'], $total, $pdo);
         }
         
         // Commit transaction
